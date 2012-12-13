@@ -1,4 +1,4 @@
-Shapps (=Share apps,an Uliewb app collections project)
+Shapps
 ========================================
 
 > Chunlin Zhang <zhangchunlin@gmail.com> ,Jiannan Tang <tangjn518@gmail.com>
@@ -6,8 +6,8 @@ Shapps (=Share apps,an Uliewb app collections project)
 About Shapps
 ----------------
 
-Uliweb is a Python based web framework. Shapps is an apps collection project 
-of uliweb like Plugs.
+Shapps = SHare APPS.
+Uliweb ( https://github.com/limodou/uliweb ) is a Python based web framework. Shapps is an apps collection project of uliweb like Plugs ( https://github.com/limodou/plugs ).
 
 License
 ------------
