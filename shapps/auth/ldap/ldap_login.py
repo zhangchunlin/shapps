@@ -251,4 +251,4 @@ class LDAPAuth():
 
 #gen a ldapauth_handler for uliweb app
 from uliweb import settings
-ldapauth_handler = LDAPAuth(**settings.LDAP.config)
+ldapauth_handler = LDAPAuth(**settings.LDAP.auth)
