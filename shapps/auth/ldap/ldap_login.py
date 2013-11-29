@@ -65,6 +65,7 @@ class LDAPAuth():
         surname_attribute=None, # ('sn') ldap attribute we get the family name from
         aliasname_attribute=None, # ('displayName') ldap attribute we get the aliasname from
         email_attribute=None, # ('mail') ldap attribute we get the email address from
+        memberof_attribute=None, #('memberOf')
         email_callback=None, # called to make up email address
         name_callback=None, # called to use a Wiki name different from the login name
         coding='utf-8', # coding used for ldap queries and result values
@@ -92,6 +93,7 @@ class LDAPAuth():
         self.surname_attribute = surname_attribute
         self.aliasname_attribute = aliasname_attribute
         self.email_attribute = email_attribute
+        self.memberof_attribute = memberof_attribute
         self.email_callback = email_callback
         self.name_callback = name_callback
 
@@ -118,7 +120,7 @@ class LDAPAuth():
         # we require non-empty password as ldap bind does a anon (not password
         # protected) bind if the password is empty and SUCCEEDS!
         if not password:
-            return False
+            return False,None
 
         try:
             try:
@@ -171,6 +173,7 @@ class LDAPAuth():
                                          'aliasname_attribute',
                                          'surname_attribute',
                                          'givenname_attribute',
+                                         'memberof_attribute',
                                          ] if getattr(self, attr) is not None]
                 lusers = l.search_st(self.base_dn, self.scope, filterstr.encode(coding),
                                      attrlist=attrs, timeout=self.timeout)
@@ -188,7 +191,7 @@ class LDAPAuth():
                     if result_length == 0:
                         logging.debug("Search found no matches for %r." % (filterstr, ))
                     logging.debug("Invalid username or password.")
-                    return False
+                    return False, None
 
                 dn, ldap_dict = lusers[0]
                 if not self.bind_once:
@@ -225,15 +228,15 @@ class LDAPAuth():
                     #TODO:handle email
                     pass
                 logging.debug("user name %r email %r alias %r" % (username, email, aliasname))
-                return True
+                return True, ldap_dict
 
 
             except ldap.INVALID_CREDENTIALS, err:
                 logging.debug("invalid credentials (wrong password?) for dn %r (username: %r)" % (dn, username))
                 logging.debug("Invalid username or password.")
-                return False
+                return False, None
 
-            return False
+            return False, None
 
         except ldap.SERVER_DOWN, err:
             # looks like this LDAP server isn't working, so we just try the next
@@ -242,11 +245,11 @@ class LDAPAuth():
             # method).
             logging.error("LDAP server %s failed (%s). "
                           "Trying to authenticate with next auth list entry." % (server, str(err)))
-            return False
+            return False, None
 
         except Exception,err:
             logging.error("caught an exception(%s):%s",Exception,err)
-            return False
+            return False, None
 
 
 #gen a ldapauth_handler for uliweb app
