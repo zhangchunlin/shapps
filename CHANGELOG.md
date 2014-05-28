@@ -1,6 +1,10 @@
 Shapps Change Log
 =====================
 
+0.1.1 Version
+-----------------
+* auth.ldap add group support
+
 0.1.0 Version
 -----------------
 

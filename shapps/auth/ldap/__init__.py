@@ -12,6 +12,17 @@ def update_user_groups(user,gnames):
     UserGroup = get_model('usergroup')
     groups = []
     for gname in gnames:
+        if not isinstance(gname,unicode):
+            decode_ok = False
+            for c in [settings.GLOBAL.DEFAULT_ENCODING,"utf8"]:
+                try:
+                    gname = gname.decode(c)
+                    decode_ok = True
+                    break
+                except UnicodeDecodeError as e:
+                    pass
+            if not decode_ok:
+                gname = repr(gname)
         group = UserGroup.get(UserGroup.c.name==gname)
         if not group:
             group = UserGroup(name=gname)
