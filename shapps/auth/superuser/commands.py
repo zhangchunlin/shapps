@@ -5,7 +5,7 @@ from uliweb.core.commands import Command
 from uliweb.orm import get_model
 
 class SuperuserListCommand(Command):
-    name = 'suserlist'
+    name = 'sulist'
     help = 'Super user list'
     
     def handle(self, options, global_options, *args):
@@ -16,7 +16,7 @@ class SuperuserListCommand(Command):
             print user.id, user.username, user.email
 
 class SuperuserSetCommand(Command):
-    name = 'suserset'
+    name = 'suset'
     help = 'Super user set,usage "uliweb %s USERNAME"'%(name)
     
     def handle(self, options, global_options, *args):
