@@ -1,0 +1,55 @@
+{{use "avalon"}}
+{{use "jqcookie"}}
+<div ms-controller="sharedir">
+<span ms-repeat-el="rpathlist"><a ms-href="#/{%el.rpath%}">{%el.name%}</a> / </span>
+<br></br>
+<table class="table">
+<tr><th>Name</th> <th>Last modified</th> <th>Size</th></tr>
+<tr ms-repeat-el="entries"><td><span ms-if="el.isdir"><i ms-class="icon-folder-close"></i>&nbsp<a ms-href="#/{%el.rpath%}">{%el.name%}</a></span><span ms-if="!el.isdir"><i ms-class="icon-file"></i>&nbsp<a ms-href="/sharedir_download/{%dname%}/{%el.rpath%}">{%el.name%}</a></span></td><td>{%el.mtime%}</td><td>{%el.size%}</td></tr>
+</table>
+</div>
+<script>
+require(["ready!", 'avalon', "mmRouter"], function() {
+    var model = avalon.define("sharedir", function(vm){
+        vm.dname = "{{=dname}}"
+        vm.cookie_name = "sharedir_"+vm.dname
+        vm.rpath = ""
+        vm.rpathlist = []
+        vm.entries = []
+        vm.update_rpath_entries = function(rpath,not_save) {
+            var rpath2 = rpath || vm.rpath
+            $.ajax({
+              type: "GET",
+              url: "/api/sharedir/listdir/"+vm.dname+"?rpath="+rpath2,
+              success: function(data){
+                var entries = data.entries
+                var rpathlist = data.rpathlist
+                vm.entries = entries
+                vm.rpathlist = rpathlist
+                if (!not_save) {
+                    $.cookie(vm.cookie_name,vm.rpath)
+                }
+                document.title=vm.dname+"/"+decodeURIComponent(rpath2)
+              }
+            })
+        }
+        vm.set_rpath = function(rpath){
+            vm.rpath = rpath || ""
+            vm.update_rpath_entries()
+        }
+        vm.update_rpath_for_first_time = function(rpath){
+            vm.update_rpath_entries(rpath,true)
+        }
+    })
+    avalon.router.get("/", function(a) {
+        model.set_rpath("")
+    })
+    avalon.router.get("/:rpath", function(a) {
+        var rpath_param = this.path.substring(1)
+        model.set_rpath(rpath_param)
+    })
+    avalon.history.start({basepath: "/sharedir/"+model.dname})
+    avalon.scan()
+    model.update_rpath_for_first_time($.cookie(model.cookie_name))
+})
+</script>
