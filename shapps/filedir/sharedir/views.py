@@ -1,0 +1,99 @@
+#coding=utf-8
+import os
+import time
+import mimetypes
+import urllib
+from datetime import datetime
+
+from uliweb import expose, NotFound
+from werkzeug import Response, wrap_file
+
+@expose('/sharedir/<dname>')
+def sharedir(dname):
+    return {"dname":dname}
+
+@expose('/api/sharedir/listdir/<path:dname>')
+def api_sharedir_listdir(dname):
+    d = {}
+    rpath = urllib.unquote_plus(request.params.get("rpath",""))
+    rootpath = os.path.abspath(settings.SHAREDIR.directories.get(dname))
+    if not rootpath:
+        raise NotFound
+    apath = os.path.join(rootpath,rpath)
+    
+    def myquote(path):
+        if isinstance(path,unicode):
+            path = path.encode("utf8")
+        return urllib.quote_plus(path)
+    
+    def get_rpathlist():
+        dname2 = dname
+        rpath2 = ""
+        rpathlist = [{"name":dname2,"rpath":rpath2}]
+        for dname3 in rpath.split(os.sep):
+            if dname3:
+                d={}
+                d["name"]=dname3
+                rpath2 = os.path.join(rpath2,dname3)
+                d["rpath"]=myquote(rpath2)
+                rpathlist.append(d)
+        return rpathlist
+    
+    def get_entries():
+        rlist = []
+        if apath.startswith(rootpath):
+            try:
+                for entry in os.listdir(apath):
+                    d = {}
+                    d["name"]=entry
+                    ep = os.path.join(apath,entry)
+                    st = os.stat(ep)
+                    d["isdir"]=os.path.isdir(ep)
+                    if d["isdir"]:
+                        esize = ""
+                    else:
+                        esize = st.st_size
+                    d["mtime"] = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(st.st_mtime))
+                    d["size"]=esize
+                    relpath = os.path.relpath(ep,rootpath)
+                    d["rpath"]=myquote(relpath)
+                    rlist.append(d)
+            except OSError as e:
+                pass
+        def mycmp(x,y):
+            c = - cmp(x["isdir"],y["isdir"])
+            if c==0:
+                c = - cmp(x["mtime"],y["mtime"])
+            return c
+        return sorted(rlist,mycmp)
+    d['entries'] = get_entries()
+    d['rpathlist'] = get_rpathlist()
+    return json(d)
+
+@expose('/sharedir_download/<dname>/<path:rpath>')
+def sharedir_download(dname,rpath):
+    rootpath = os.path.abspath(settings.SHAREDIR.directories.get(dname))
+    if not rootpath:
+        raise NotFound
+    apath = os.path.join(rootpath,rpath)
+    if (not apath.startswith(rootpath)) or (not os.path.isfile(apath)):
+        raise NotFound
+    
+    def _opener(filename):
+        if not os.path.exists(filename):
+            raise NotFound
+        return (
+            open(filename, 'rb'),
+            datetime.utcfromtimestamp(os.path.getmtime(filename)),
+            int(os.path.getsize(filename))
+        )
+    
+    guessed_type = mimetypes.guess_type(apath)
+    mime_type = guessed_type[0] or 'application/octet-stream'
+    headers = []
+    headers.append(('Content-Type', mime_type))
+    
+    f, mtime, file_size = _opener(apath)
+    
+    return Response(wrap_file(request.environ, f), status=200, headers=headers,
+        direct_passthrough=True)
