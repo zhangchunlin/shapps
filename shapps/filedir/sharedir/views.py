@@ -6,7 +6,9 @@ import urllib
 from datetime import datetime
 
 from uliweb import expose, NotFound
+from uliweb.utils.filedown import FileIterator
 from werkzeug import Response, wrap_file
+from werkzeug.http import parse_range_header
 
 @expose('/sharedir/<dname>')
 def sharedir(dname):
@@ -20,12 +22,12 @@ def api_sharedir_listdir(dname):
     if not rootpath:
         raise NotFound
     apath = os.path.join(rootpath,rpath)
-    
+
     def myquote(path):
         if isinstance(path,unicode):
             path = path.encode("utf8")
         return urllib.quote_plus(path)
-    
+
     def get_rpathlist():
         dname2 = dname
         rpath2 = ""
@@ -38,7 +40,7 @@ def api_sharedir_listdir(dname):
                 d["rpath"]=myquote(rpath2)
                 rpathlist.append(d)
         return rpathlist
-    
+
     def get_entries():
         rlist = []
         if apath.startswith(rootpath):
@@ -49,14 +51,15 @@ def api_sharedir_listdir(dname):
                     ep = os.path.join(apath,entry)
                     st = os.stat(ep)
                     d["isdir"]=os.path.isdir(ep)
+                    relpath = os.path.relpath(ep,rootpath)
                     if d["isdir"]:
                         esize = ""
+                        d["rpath"]=myquote(relpath)
                     else:
                         esize = st.st_size
+                        d["rpath"]=relpath
                     d["mtime"] = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(st.st_mtime))
                     d["size"]=esize
-                    relpath = os.path.relpath(ep,rootpath)
-                    d["rpath"]=myquote(relpath)
                     rlist.append(d)
             except OSError as e:
                 pass
@@ -78,22 +81,40 @@ def sharedir_download(dname,rpath):
     apath = os.path.join(rootpath,rpath)
     if (not apath.startswith(rootpath)) or (not os.path.isfile(apath)):
         raise NotFound
-    
+
     def _opener(filename):
-        if not os.path.exists(filename):
-            raise NotFound
         return (
             open(filename, 'rb'),
             datetime.utcfromtimestamp(os.path.getmtime(filename)),
             int(os.path.getsize(filename))
         )
-    
+
     guessed_type = mimetypes.guess_type(apath)
     mime_type = guessed_type[0] or 'application/octet-stream'
+
     headers = []
     headers.append(('Content-Type', mime_type))
-    
+
+    if request.range:
+        range = request.range
+    else:
+        range = parse_range_header(request.environ.get('HTTP_RANGE'))
+    #when request range,only recognize "bytes" as range units
+    if range and range.units=="bytes":
+        rbegin,rend = range.ranges[0]
+        try:
+            fsize = os.path.getsize(apath)
+        except OSError as e:
+            return Response("Not found",status=404)
+        if (rbegin+1)<fsize:
+            if rend == None:
+                rend = fsize-1
+            headers.append(('Content-Length',str(rend-rbegin+1)))
+            headers.append(('Content-Range','%s %d-%d/%d' %(range.units,rbegin, rend, fsize)))
+            return Response(FileIterator(apath,rbegin,rend),
+                status=206, headers=headers, direct_passthrough=True)
+
     f, mtime, file_size = _opener(apath)
-    
+
     return Response(wrap_file(request.environ, f), status=200, headers=headers,
         direct_passthrough=True)
