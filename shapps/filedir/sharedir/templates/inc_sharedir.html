@@ -17,11 +17,10 @@ require(["ready!", 'avalon', "mmRouter"], function() {
         vm.rpathlist = []
         vm.entries = []
         vm.first_visit = true
-        vm.update_rpath_entries = function(rpath) {
-            var rpath2 = rpath || vm.rpath
+        vm.update_rpath_entries = function() {
             $.ajax({
               type: "GET",
-              url: "/api/sharedir/listdir/"+vm.dname+"?rpath="+rpath2,
+              url: "/api/sharedir/listdir/"+vm.dname+"?rpath="+vm.rpath,
               success: function(data){
                 var entries = data.entries
                 var rpathlist = data.rpathlist
@@ -33,13 +32,13 @@ require(["ready!", 'avalon', "mmRouter"], function() {
                 else {
                     vm.first_visit = false
                 }
-                document.title=vm.dname+"/"+decodeURIComponent(rpath2)
+                document.title=vm.dname+"/"+decodeURIComponent(vm.rpath)
               }
             })
         }
         vm.set_rpath = function(rpath){
             if (vm.first_visit) {
-                vm.rpath = rpath || $.cookie(model.cookie_name)
+                vm.rpath = rpath || $.cookie(model.cookie_name) || ""
             }
             else {
                 vm.rpath = rpath || ""
@@ -48,11 +47,11 @@ require(["ready!", 'avalon', "mmRouter"], function() {
         }
     })
     avalon.router.get("/", function(a) {
-        model.set_rpath("",model.first_visit)
+        model.set_rpath("")
     })
     avalon.router.get("/:rpath", function(a) {
         var rpath_param = this.path.substring(1)
-        model.set_rpath(rpath_param,model.first_visit)
+        model.set_rpath(rpath_param)
     })
     avalon.history.start({basepath: "/sharedir/"+model.dname})
     avalon.scan()
