@@ -5,15 +5,27 @@ import mimetypes
 import urllib
 from datetime import datetime
 
-from uliweb import expose, NotFound
+from uliweb import expose, NotFound, functions, decorators, settings
 from uliweb.utils.filedown import FileIterator
+from uliweb.utils.common import import_attr
 from werkzeug import Response, wrap_file
 from werkzeug.http import parse_range_header
 
+#just example,do nothing
+def check_permission(func):
+    from uliweb.utils.common import wraps
+    @wraps(func)
+    def _f(*args, **kwargs):
+        #do something before
+        return func(*args, **kwargs)
+    return _f
+
+@decorators.sharedir_check_permission
 @expose('/sharedir/<dname>')
 def sharedir(dname):
     return {"dname":dname}
 
+@decorators.api_sharedir_listdir_check_permission
 @expose('/api/sharedir/listdir/<path:dname>')
 def api_sharedir_listdir(dname):
     d = {}
@@ -73,6 +85,7 @@ def api_sharedir_listdir(dname):
     d['rpathlist'] = get_rpathlist()
     return json(d)
 
+@decorators.sharedir_download_check_permission
 @expose('/sharedir_download/<dname>/<path:rpath>')
 def sharedir_download(dname,rpath):
     rootpath = os.path.abspath(settings.SHAREDIR.directories.get(dname))
