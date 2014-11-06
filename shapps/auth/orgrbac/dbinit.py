@@ -52,7 +52,7 @@ def dbinit():
 
     for k,v in settings.get('RBACORG', {}).items():
         rbacorg_name,rbacscheme_name = v
-        rbacscheme = RbacScheme.get(RbacScheme.c.name==scheme_name)
+        rbacscheme = RbacScheme.get(RbacScheme.c.name==rbacscheme_name)
         if not rbacscheme:
             raise Exception, 'RbacScheme [%s] not found.' % rbacscheme
         rbacorg = RbacOrg.get(RbacOrg.c.name==rbacorg_name)

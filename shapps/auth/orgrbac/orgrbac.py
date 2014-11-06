@@ -24,6 +24,8 @@ def has_org_role(user, org, *roles, **kwargs):
         RbacOrg = get_model('rbacorg')
         org = RbacOrg.get(RbacOrg.c.name==org)
 
+    gorg = org.rbacscheme.gorg
+
     for role in roles:
         if isinstance(role, (str, unicode)):
             role = Role.get(Role.c.name==role)
@@ -41,23 +43,31 @@ def has_org_role(user, org, *roles, **kwargs):
 
             para = kwargs.copy()
             para['user'] = user
+            para['org'] = org
             flag = call_func(func, para)
             if flag:
                 return role
 
-        #try orgrole now
-        orgrole = OrgRole.get(and_(OrgRole.c.role==role.id,
-            OrgRole.c.organization==org.id))
-        if not orgrole:
-            continue
+        #try org
+        orgrole = OrgRole.get(and_(OrgRole.c.role==role.id, OrgRole.c.organization==org.id))
+        if orgrole:
+            flag = orgrole.users.has(user)
+            if flag:
+                return orgrole
 
-        flag = orgrole.users.has(user)
-        if flag:
-            return orgrole
+            flag = orgrole.usergroups_has_user(user)
+            if flag:
+                return orgrole
+        #try gorg
+        orgrole = OrgRole.get(and_(OrgRole.c.role==role.id, OrgRole.c.organization==gorg.id))
+        if orgrole:
+            flag = orgrole.users.has(user)
+            if flag:
+                return orgrole
 
-        flag = orgrole.usergroups_has_user(user)
-        if flag:
-            return orgrole
+            flag = orgrole.usergroups_has_user(user)
+            if flag:
+                return orgrole
     return False
 
 def has_org_permission(user, org, *permissions, **role_kwargs):
