@@ -1,11 +1,38 @@
 #! /usr/bin/env python
 #coding=utf-8
 
+
+from uliweb import functions
 from uliweb.orm import get_model
 from uliweb.utils.common import import_attr
 from uliweb.contrib.rbac.rbac import call_func, __role_funcs__
 from sqlalchemy.sql import and_
 
+#override contrib.rbac.rbac.has_permission, because should filter Role_Perm_Rel.c.scheme==None in orgrbac env
+def has_permission(user, *permissions, **role_kwargs):
+    """
+    Judge if an user has permission, and if it does return role object, and if it doesn't
+    return False. role_kwargs will be passed to role functions.
+    With role object, you can use role.relation to get Role_Perm_Rel object.
+    """
+    Role = get_model('role')
+    Perm = get_model('permission')
+    Role_Perm_Rel = get_model('role_perm_rel')
+
+    if isinstance(user, (unicode, str)):
+        User = get_model('user')
+        user = User.get(User.c.username==user)
+
+    for name in permissions:
+        perm = Perm.get(Perm.c.name==name)
+        if not perm:
+            continue
+
+        flag = functions.has_role(user, *list(perm.perm_roles.filter(Role_Perm_Rel.c.scheme==None).with_relation().all()), **role_kwargs)
+        if flag:
+            return flag
+
+    return False
 
 def has_org_role(user, org, *roles, **kwargs):
     """

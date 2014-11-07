@@ -10,6 +10,7 @@ class RbacScheme(Model):
     #scheme scope global organization,to keep global roles and permissions of this scheme
     gorg = Reference('rbacorg', collection_name='gorgscheme', nullable=True)
 
+#override contrib.rbac.models.Role_Perm_Rel
 class Role_Perm_Rel(Model):
     role = Reference('role')
     permission = Reference('permission')
@@ -20,6 +21,7 @@ class Role_Perm_Rel(Model):
     def OnInit(cls):
         Index('rolepermrel_idx', cls.c.role, cls.c.permission , cls.c.scheme , unique=True)
 
+#override contrib.rbac.models.Permission
 class Permission(Model):
     name = Field(str, max_length=80, required=True)
     description = Field(str, max_length=255)
