@@ -4,9 +4,12 @@
 <span ms-repeat-el="rpathlist"><a ms-href="#/{%el.rpath%}">{%el.name%}</a> / </span>
 <br></br>
 <table class="table">
-<tr><th>Name</th> <th>Last modified</th> <th>Size</th></tr>
-<tr ms-repeat-el="entries"><td><span ms-if="el.isdir"><i ms-class="icon-folder-close"></i>&nbsp<a ms-href="#/{%el.rpath%}">{%el.name%}</a></span><span ms-if="!el.isdir"><i ms-class="icon-file"></i>&nbsp<a ms-href="/sharedir_download/{%dname%}/{%el.rpath%}">{%el.name%}</a></span></td><td>{%el.mtime%}</td><td>{%el.size%}</td></tr>
+<tr><th>#</th> <th>Name</th> <th>Last modified</th> <th>Size</th></tr>
+<tr ms-repeat-el="entries"><td>{%$index%}</td><td><span ms-if="el.isdir"><i ms-class="icon-folder-close"></i>&nbsp<a ms-href="#/{%el.rpath%}">{%el.name%}</a></span><span ms-if="!el.isdir"><i ms-class="icon-file"></i>&nbsp<a ms-href="/sharedir_download/{%dname%}/{%el.rpath%}">{%el.name%}</a></span></td><td>{%el.mtime%}</td><td>{%el.size%}</td></tr>
 </table>
+<div class="alert alert-info" ms-visible="!entries_full">
+Not full list,click <button class="btn btn-info" type="button" ms-click="update_rpath_entries_full">Show all</button> to show full list,but may take long time.
+</div>
 </div>
 <script>
 require(["ready!", 'avalon', "mmRouter"], function() {
@@ -16,16 +19,19 @@ require(["ready!", 'avalon', "mmRouter"], function() {
         vm.rpath = ""
         vm.rpathlist = []
         vm.entries = []
+        vm.entries_full = true
         vm.first_visit = true
-        vm.update_rpath_entries = function() {
+        vm.update_rpath_entries = function(maxnum) {
+            maxnum = maxnum || {{=settings.SHAREDIR.entries_maxnum_default}}
             $.ajax({
               type: "GET",
-              url: "/api/sharedir/listdir/"+vm.dname+"?rpath="+vm.rpath,
+              url: "/api/sharedir/listdir/"+vm.dname+"?rpath="+vm.rpath+"&maxnum="+maxnum,
               success: function(data){
                 var entries = data.entries
                 var rpathlist = data.rpathlist
                 vm.entries = entries
                 vm.rpathlist = rpathlist
+                vm.entries_full = data.entries_full
                 if (!vm.first_visit) {
                     $.cookie(vm.cookie_name,vm.rpath)
                 }
@@ -35,6 +41,9 @@ require(["ready!", 'avalon', "mmRouter"], function() {
                 document.title=vm.dname+"/"+decodeURIComponent(vm.rpath)
               }
             })
+        }
+        vm.update_rpath_entries_full = function() {
+            vm.update_rpath_entries({{=settings.SHAREDIR.entries_maxnum_full}})
         }
         vm.set_rpath = function(rpath){
             if (vm.first_visit) {

@@ -34,6 +34,7 @@ def api_sharedir_listdir(dname):
     if not rootpath:
         raise NotFound
     apath = os.path.join(rootpath,rpath)
+    maxnum = int(request.params.get("maxnum",settings.SHAREDIR.entries_maxnum_default))
 
     def myquote(path):
         if isinstance(path,unicode):
@@ -81,7 +82,9 @@ def api_sharedir_listdir(dname):
                 c = - cmp(x["mtime"],y["mtime"])
             return c
         return sorted(rlist,mycmp)
-    d['entries'] = get_entries()
+    entries = get_entries()
+    d['entries'] = entries[:maxnum]
+    d['entries_full'] = len(d['entries'])==len(entries) or len(d['entries'])>=settings.SHAREDIR.entries_maxnum_full
     d['rpathlist'] = get_rpathlist()
     return json(d)
 
