@@ -5,7 +5,7 @@
 <br></br>
 <table class="table">
 <tr><th>#</th> <th>Name</th> <th>Last modified</th> <th>Size</th></tr>
-<tr ms-repeat-el="entries"><td>{%$index%}</td><td><span ms-if="el.isdir"><i ms-class="icon-folder-close"></i>&nbsp<a ms-href="#/{%el.rpath%}">{%el.name%}</a></span><span ms-if="!el.isdir"><i ms-class="icon-file"></i>&nbsp<a ms-href="/sharedir_download/{%dname%}/{%el.rpath%}">{%el.name%}</a></span></td><td>{%el.mtime%}</td><td>{%el.size%}</td></tr>
+<tr ms-repeat-el="entries"><td>{%$index+1%}</td><td><span ms-if="el.isdir"><i ms-class="icon-folder-close"></i>&nbsp<a ms-href="#/{%el.rpath%}">{%el.name%}</a></span><span ms-if="!el.isdir"><i ms-class="icon-file"></i>&nbsp<a ms-href="/sharedir_download/{%dname%}/{%el.rpath%}">{%el.name%}</a></span></td><td>{%el.mtime%}</td><td>{%el.size%}</td></tr>
 </table>
 <div class="alert alert-info" ms-visible="!entries_full">
 Not full list,click <button class="btn btn-info" type="button" ms-click="update_rpath_entries_full">Show all</button> to show full list,but may take long time.
