@@ -324,7 +324,7 @@ class LDAPAuth(object):
 
         except ldap.INVALID_CREDENTIALS as err:
             log.error("invalid credentials, bad bind user or password?")
-            return False, None
+            return None
 
         except Exception,err:
             log.error("get_user() caught an exception(%s):%s",Exception,err)
@@ -342,7 +342,7 @@ class LDAPAuth(object):
 
             except ldap.INVALID_CREDENTIALS as err:
                 log.error("invalid credentials, bad bind user or password?")
-                return False, None
+                return None
 
             except Exception,err:
                 log.error("search_user() caught an exception(%s):%s",Exception,err)
@@ -371,10 +371,9 @@ class LDAPAuth(object):
 
         except ldap.INVALID_CREDENTIALS as err:
             log.error("invalid credentials, bad bind user or password?")
-            return False, None
 
-        except Exception,err:
-            log.error("get_group() caught an exception(%s):%s",Exception,err)
+        except Exception as err:
+            log.error("get_group() caught an exception:%s,groupname:%s",err,repr(groupname))
 
         return attr_dict
 
@@ -391,7 +390,7 @@ class LDAPAuth(object):
 
         except ldap.INVALID_CREDENTIALS as err:
             log.error("invalid credentials, bad bind user or password?")
-            return False, None
+            return None
 
         except Exception,err:
             log.error("search_group() caught an exception(%s):%s",Exception,err)
