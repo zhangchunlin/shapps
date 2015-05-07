@@ -400,4 +400,7 @@ class LDAPAuth(object):
 
 #gen a ldapauth_handler for uliweb app
 from uliweb import settings
-ldapauth_handler = LDAPAuth(**settings.LDAP.server_param)
+if settings.LDAP and settings.LDAP.server_param:
+    ldapauth_handler = LDAPAuth(**settings.LDAP.server_param)
+else:
+    ldapauth_handler = None
