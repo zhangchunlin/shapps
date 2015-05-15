@@ -1,6 +1,6 @@
 jQuery(
 function($) {
-	
+
 	$(document).ready(function(){
 		var contentButton = [];
 		var contentTop = [];
@@ -52,13 +52,13 @@ function($) {
 	  					} else {
 	  						console.log("incorrect argument, ignored.");
 	  						topMargin = 0;
-	  					}	
+	  					}
 	  				}
 	  			} else {
 	  				topMargin = 0;
 	  			}
 	  			menuSize = $('.'+itemClass).size();
-  			}			
+  			}
 			stickyHeight = parseInt($(this).height());
 			stickyMarginB = parseInt($(this).css('margin-bottom'));
 			currentMarginT = parseInt($(this).next().closest('div').css('margin-top'));
@@ -75,7 +75,7 @@ function($) {
 						contentView = $('#'+content[i]+'').height()*.4;
 						testView = contentTop[i] - contentView;
 						//console.log(varscroll);
-						if(varscroll > testView){
+						if(varscroll >= testView){
 							$('.'+itemClass).removeClass(itemHover);
 							$('.'+itemClass+':eq('+i+')').addClass(itemHover);
 						} else if(varscroll < 50){
@@ -83,7 +83,7 @@ function($) {
 							$('.'+itemClass+':eq(0)').addClass(itemHover);
 						}
 					}
-					if(scrollDir == 'down' && varscroll > contentTop[i]-50 && varscroll < contentTop[i]+50) {
+					if(scrollDir == 'down' && varscroll > contentTop[i]-50 && varscroll < contentTop[i]+200) {
 						$('.'+itemClass).removeClass(itemHover);
 						$('.'+itemClass+':eq('+i+')').addClass(itemHover);
 					}
