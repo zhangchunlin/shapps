@@ -1,4 +1,4 @@
 def call(app, var, env):
     a = []
-    a.append('stickup/stickUp.min.js')
+    a.append('stickup/stickUp.js')
     return {'toplinks': a}
