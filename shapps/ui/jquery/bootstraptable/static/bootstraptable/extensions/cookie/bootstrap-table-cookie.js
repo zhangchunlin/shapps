@@ -107,6 +107,10 @@
         _onSort = BootstrapTable.prototype.onSort,
         _onPageNumber = BootstrapTable.prototype.onPageNumber,
         _onPageListChange = BootstrapTable.prototype.onPageListChange,
+        _onPageFirst = BootstrapTable.prototype.onPageFirst,
+        _onPagePre = BootstrapTable.prototype.onPagePre,
+        _onPageNext = BootstrapTable.prototype.onPageNext,
+        _onPageLast = BootstrapTable.prototype.onPageLast,
         _toggleColumn = BootstrapTable.prototype.toggleColumn,
         _onSearch = BootstrapTable.prototype.onSearch;
 
@@ -179,6 +183,27 @@
 
         setCookie(this, idsStateSaveList.pageList, this.options.pageSize);
     };
+
+    BootstrapTable.prototype.onPageFirst = function () {
+        _onPageFirst.apply(this, Array.prototype.slice.apply(arguments));
+        setCookie(this, idsStateSaveList.pageNumber, this.options.pageNumber);
+    };
+
+    BootstrapTable.prototype.onPagePre = function () {
+        _onPagePre.apply(this, Array.prototype.slice.apply(arguments));
+        setCookie(this, idsStateSaveList.pageNumber, this.options.pageNumber);
+    };
+
+    BootstrapTable.prototype.onPageNext = function () {
+        _onPageNext.apply(this, Array.prototype.slice.apply(arguments));
+        setCookie(this, idsStateSaveList.pageNumber, this.options.pageNumber);
+    };
+
+    BootstrapTable.prototype.onPageLast = function () {
+        _onPageLast.apply(this, Array.prototype.slice.apply(arguments));
+        setCookie(this, idsStateSaveList.pageNumber, this.options.pageNumber);
+    };
+
 
     BootstrapTable.prototype.toggleColumn = function () {
         _toggleColumn.apply(this, Array.prototype.slice.apply(arguments));

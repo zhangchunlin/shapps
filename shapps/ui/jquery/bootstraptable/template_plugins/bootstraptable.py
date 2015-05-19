@@ -6,5 +6,5 @@ def call(version = None, extensions = []):
     a.append('bootstraptable/bootstrap-table.js')
     a.append('bootstraptable/bootstrap-table.css')
     for ename in extensions:
-        a.append('extensions/%s/bootstrap-table-%s.js'%(ename, ename))
+        a.append('bootstraptable/extensions/%s/bootstrap-table-%s.js'%(ename, ename))
     return {'toplinks': a}
