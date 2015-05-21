@@ -228,7 +228,10 @@ class LDAPAuth(object):
         for k,v in ldap_dict.items():
             if k!=memberof_key and isinstance(v,list):
                 if v:
-                    ldap_dict[k]=v[0]
+                    if len(v)>1:
+                        ldap_dict[k]=v
+                    else:
+                        ldap_dict[k]=v[0]
                 else:
                     ldap_dict[k]=None
 
@@ -256,7 +259,10 @@ class LDAPAuth(object):
         for k,v in ldap_dict.items():
             if isinstance(v,list):
                 if v:
-                    ldap_dict[k]=v[0]
+                    if len(v)>1:
+                        ldap_dict[k]=v
+                    else:
+                        ldap_dict[k]=v[0]
                 else:
                     ldap_dict[k]=None
 
