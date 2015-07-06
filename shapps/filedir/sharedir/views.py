@@ -33,7 +33,9 @@ def api_sharedir_listdir(dname):
     rootpath = os.path.abspath(settings.SHAREDIR.directories.get(dname))
     if not rootpath:
         raise NotFound
-    apath = os.path.join(rootpath,rpath)
+    apath = os.path.abspath(os.path.join(rootpath,rpath))
+    if not apath.startswith(rootpath):
+        raise NotFound
     maxnum = int(request.params.get("maxnum",settings.SHAREDIR.entries_maxnum_default))
 
     def myquote(path):
@@ -94,7 +96,7 @@ def sharedir_download(dname,rpath):
     rootpath = os.path.abspath(settings.SHAREDIR.directories.get(dname))
     if not rootpath:
         raise NotFound
-    apath = os.path.join(rootpath,rpath)
+    apath = os.path.abspath(os.path.join(rootpath,rpath))
     if (not apath.startswith(rootpath)) or (not os.path.isfile(apath)):
         raise NotFound
 
