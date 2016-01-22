@@ -42,7 +42,7 @@ def _sync_ldap_user(username,attr_dict,user_auto_create=None):
         if user_auto_create==None:
             user_auto_create = settings.LDAP.user_auto_create
         if user_auto_create:
-            user = User(username=username)
+            user = User(username=username,auth_type=settings.AUTH.AUTH_TYPE_LDAP)
             changed = True
         else:
             raise UserNotFoundError('User "%s" does not existed!'% username)
