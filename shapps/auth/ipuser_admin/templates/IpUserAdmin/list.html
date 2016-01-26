@@ -1,0 +1,52 @@
+{{extend 'user_admin_layout.html'}}
+
+{{block sub_menu}}
+{{sidemenu('sidemenu','user_admin/ipuser_list')}}
+{{end}}
+
+{{block content_tool}}
+{{end}}
+
+{{block content_main}}
+{{use 'jqcookie'}}
+{{use 'bootstraptable', extensions = ["cookie"]}}
+<div id ="tool-bar" style="margin-left:8px">
+    <a class="btn btn-small btn-primary" href="{{=url_for('shapps.auth.ipuser_admin.views.IpUserAdmin.add')}}">新建IP User</a>
+</div>
+<table id="table" data-toggle="table"
+    data-toolbar="#tool-bar"
+    data-toolbar-align="left"
+    data-url="{{=url_for('shapps.auth.ipuser_admin.views.IpUserAdmin.api_bootstraptable_data')}}"
+    data-pagination="true"
+    data-side-pagination="server"
+    data-page-list="[10, 20, 50, 100, 200]"
+    data-page-size = "10"
+    data-show-columns="true"
+    data-method="post"
+    data-state-save="True"
+    data-state-save-expire="1y"
+    data-state-save-id-table="ipuser_list_table"
+    data-sort-name="id"
+    data-sort-order="desc"
+    data-buttons-align='right'>
+    <thead>
+    <tr>
+        <th data-field="id" data-sortable="true">ID</th>
+        <th data-field="username" data-sortable="true" data-formatter="format_username">Username</th>
+        <th data-field="nickname" data-sortable="true">Nick Name</th>
+        <th data-field="is_superuser" data-sortable="true">Is Superuser</th>
+        <th data-field="date_join" data-sortable="true">Joined Date</th>
+        <th data-field="deleted" data-sortable="true">Deleted</th>
+    </tr>
+    </thead>
+</table>
+
+<script>
+function format_username(value, row){
+    link = '{{=url_for('shapps.auth.ipuser_admin.views.IpUserAdmin.edit')}}?id='+ row.id
+    link = '<a href="' + link + '">' + value +'</a>'
+    return link
+}
+</script>
+
+{{end}}

@@ -1,0 +1,62 @@
+{{extend 'IpUserAdmin/add.html'}}
+
+{{block add_legend}}<legend>Edit IP User</legend>{{end add_legend}}
+
+{{block add_action}}
+<div class="controls"><button class="btn btn-primary" type="button" ms-attr-disabled="!can_add" ms-click="update_ip_user">Update</button> <a href="#confirmRemove" role="button" class="btn btn-danger" data-toggle="modal">Remove</a></div>
+<div id="confirmRemove" class="modal hide fade" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h3>Confirm</h3>
+  </div>
+  <div class="modal-body">
+    <p>Confirm to remove this user?</p>
+  </div>
+  <div class="modal-footer">
+    <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+    <button class="btn btn-danger" ms-click="remove_ip_user()">Remove</button>
+  </div>
+</div>
+
+{{end add_action}}
+
+{{block vm_define_ext}}
+        update_ip_user : function(){
+            $.ajax({
+                type: "POST",
+                url: "{{=url_for('shapps.auth.ipuser_admin.views.IpUserAdmin.api_update')}}",
+                data: {ip:vm.ip,nickname:vm.nickname,id:{{=user.id}}},
+                success: function(data){
+                    vm.add_return_msg = data.msg
+                    vm.add_return_success = data.success
+                }
+            })
+        },
+        remove_ip_user : function() {
+            $('#confirmRemove').modal('hide')
+            $.ajax({
+                type: "POST",
+                url: "{{=url_for('shapps.auth.ipuser_admin.views.IpUserAdmin.api_remove')}}",
+                data: {id:{{=user.id}}},
+                success: function(data){
+                    vm.add_return_msg = data.msg
+                    vm.add_return_success = data.success
+                    if (data.success) {
+                        var go_next = function(){
+                            window.location.href="{{=url_for('shapps.auth.ipuser_admin.views.IpUserAdmin.list')}}"
+                        }
+                        setTimeout(go_next,2000)
+                    }
+                }
+            })
+        },
+        init_user : function() {
+            vm.ip = "{{=user.username}}"
+            vm.nickname = "{{=user.nickname}}"
+        },
+{{end vm_define_ext}}
+
+{{block vm_run_ext}}
+vm.init_user()
+{{end vm_run_ext}}
+

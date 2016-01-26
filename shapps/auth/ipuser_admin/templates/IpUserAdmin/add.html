@@ -1,0 +1,113 @@
+{{extend 'user_admin_layout.html'}}
+
+{{block sub_menu}}
+{{sidemenu('sidemenu','user_admin/ipuser_list')}}
+{{end sub_menu}}
+
+{{block content_main}}
+{{if errmsg:}}
+<div class="alert">
+  <strong>Warning!</strong> {{=errmsg}}
+</div>
+{{else:}}
+{{use "avalon"}}
+
+<div class="form-horizontal" ms-controller="add_ip_user" class="ms-controller">
+    {{block add_legend}}<legend>New IP User</legend>{{end add_legend}}
+    <div class="control-group">
+        <label class="control-label">IP *</label>
+        <div class="controls"><input type="text" id="ip" ms-duplex="ip" placeholder="Please IP address"></div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Nickname *</label>
+        <div class="controls"><input type="text" id="nickname" ms-duplex="nickname" placeholder="Nickname for this IP"></div>
+    </div>
+    <div class="control-group">
+        <label class="control-label"></label>
+        <div class="controls" ms-visible="add_err_msg!=''"><label class="label label-important">{%add_err_msg%}</label></div>
+        <div ms-visible="add_return_msg!=''">
+            <span class="label" ms-class="label-success:add_return_success" ms-class-1="label-important:!add_return_success">{%add_return_msg%}</span>
+        </div>
+        {{block add_action}}
+        <div class="controls"><button class="btn btn-primary" type="button" ms-attr-disabled="!can_add" ms-click="add_ip_user">Add</button></div>
+        {{end add_action}}
+    </div>
+</div>
+
+<script>
+require(["domReady!"], function() {
+    var vm = avalon.define({
+        $id : "add_ip_user",
+        ip : "",
+        nickname : "",
+        can_add : false,
+        add_err_msg : "",
+
+        {{block vm_define_ext}}
+        {{end vm_define_ext}}
+
+        update_can_add : function() {
+            vm.add_err_msg = ""
+            vm.can_add = true
+            var err_condition = function(c,msg) {
+                if (c) {
+                    if (vm.add_err_msg == "") {
+                        vm.add_err_msg = msg
+                    }
+                    else {
+                        vm.add_err_msg = vm.add_err_msg+","+msg
+                    }
+                    vm.can_add = false
+                }
+            }
+            var ip = vm.ip.trim()
+            err_condition(ip=="","IP should be filled")
+            if (ip!="") {
+                function ip_addr_valid(ip_str){
+                   var re=/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/
+                   if(re.test(ip_str))
+                   {
+                       if( RegExp.$1<256 && RegExp.$2<256 && RegExp.$3<256 && RegExp.$4<256)
+                       return true
+                   }
+                   return false
+                }
+                err_condition(!ip_addr_valid(ip),"IP address invalid")
+            }
+            nickname = vm.nickname.trim()
+            err_condition(nickname=="","Nickname should be filled")
+        },
+        init_can_add_watch : function() {
+            var w = function(varname) {
+                vm.$watch(varname, function(newValue, oldValue){
+                    vm.update_can_add()
+                    //avalon.log(varname+":"+oldValue+"->"+newValue)
+                })
+            }
+            w("ip")
+            w("nickname")
+        },
+        add_return_msg : "",
+        add_return_success : true,
+        add_ip_user : function(){
+            $.ajax({
+                type: "POST",
+                url: "{{=url_for('shapps.auth.ipuser_admin.views.IpUserAdmin.api_add')}}",
+                data: {ip:vm.ip,nickname:vm.nickname},
+                success: function(data){
+                    vm.add_return_msg = data.msg
+                    vm.add_return_success = data.success
+                    //show_message(data.msg,data.success?"success":"error")
+                }
+            })
+        }
+    })
+    avalon.scan()
+    vm.init_can_add_watch()
+    vm.update_can_add()
+    {{block vm_run_ext}}
+    {{end vm_run_ext}}
+})
+</script>
+{{pass}}
+{{end content_main}}
