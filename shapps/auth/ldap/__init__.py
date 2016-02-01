@@ -29,7 +29,7 @@ def _update_user_groups(user,gnames):
                 gname = repr(gname)
         group = UserGroup.get(UserGroup.c.name==gname)
         if not group:
-            group = UserGroup(name=gname)
+            group = UserGroup(name=gname, auth_type=settings.AUTH.AUTH_TYPE_LDAP)
             group.save()
         groups.append(group)
     user.groups.update(groups)
@@ -139,7 +139,7 @@ def get_usergroup(usergroup,auto_create=None):
                     if auto_create==None:
                         auto_create = settings.LDAP.group_auto_create
                     if auto_create:
-                        usergroup_obj = UserGroup(name=groupname)
+                        usergroup_obj = UserGroup(name=groupname, auth_type=settings.AUTH.AUTH_TYPE_LDAP)
                         changed = True
                         log.info("UserGroup '%s' auto create"%(groupname))
 
