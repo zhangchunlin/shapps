@@ -58,6 +58,9 @@ def _sync_ldap_user(username,attr_dict,user_auto_create=None):
                     setattr(user,to_user,attr)
                     changed = True
 
+    if changed:
+        user.save()
+
     #sync user.groups
     if settings.LDAP.sync_user_groups:
         memberof = attr_dict.get('memberof')
@@ -70,9 +73,6 @@ def _sync_ldap_user(username,attr_dict,user_auto_create=None):
                 except IndexError,e:
                     log.error("error when handle memberOf( %s ): %s"%(i,e))
             _update_user_groups(user,gnames)
-
-    if changed:
-        user.save()
 
     return user
 
