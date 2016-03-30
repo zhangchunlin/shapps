@@ -1,0 +1,74 @@
+{{if errmsg:}}
+<div class="alert">
+  <strong>Warning!</strong> {{=errmsg}}
+</div>
+{{else:}}
+{{use "jqupload"}}
+{{use "avalon"}}
+{{use 'bootstraptable', extensions = ["cookie"]}}
+<div class="form-horizontal" ms-controller="artifact_view" class="ms-controller">
+<legend>Artifact detail</legend>
+    <dl class="dl-horizontal">
+        <dt>id</dt><dd>{{=item.id}}</dd>
+        <dt>Artifact ID</dt><dd>{{="%s-%s"%(item.asite,item.aindex)}}</dd>
+    </dl>
+<legend>Artifact files</legend>
+<table id="table_files" data-toggle="table"
+    data-toolbar="#tool-bar"
+    data-toolbar-align="left"
+    data-url="{{=url_for('shapps.linci.artifact.views.Artifact.api_artifactfile_list_bootstraptable_data')}}"
+    data-query-params="postQueryParams"
+    data-pagination="true"
+    data-side-pagination="server"
+    data-page-list="[10, 20, 50, 100, 200]"
+    data-page-size = "10"
+    data-show-columns="true"
+    data-method="post"
+    data-sort-name="id"
+    data-sort-order="desc"
+    data-buttons-align='left'>
+    <thead>
+    <tr>
+        <th data-field="id" data-sortable="true">id</th>
+        <th data-field="path" data-sortable="true" data-formatter="format_path">path</th>
+        <th data-field="udate" data-sortable="true">upload date time</th>
+    </tr>
+    </thead>
+</table>
+
+<span class="btn btn-success fileinput-button">
+    <i class="icon-plus icon-white"></i>
+    <span>Select files to upload</span>
+    <input id="fileupload" type="file" name="files"  multiple>
+</span>
+
+<script>
+require(["domReady!"], function() {
+    var vm = avalon.define({
+        $id : "history",
+    })
+    avalon.scan()
+
+    $('#fileupload').fileupload({
+        url: '{{=url_for("shapps.linci.artifact.views.Artifact.api_upload")}}?id={{=item.id}}',
+        dataType: 'json',
+        done: function (e, data) {
+            show_message(data.result.msg)
+            $('#table_files').bootstrapTable('refresh')
+        },
+        error: function (e, msg) {
+        }
+    });
+});
+postQueryParams = function(params){
+    params['item_id'] = {{=item.id}}
+    return params
+}
+function format_path(value, row){
+    link = '{{=url_for('shapps.linci.artifact.views.Artifact.api_artifactfile_download')}}?id=' + row.id
+    link = '<a href="' + link + '">' + value +'</a>'
+    return link
+}
+</script>
+
+{{pass}}
