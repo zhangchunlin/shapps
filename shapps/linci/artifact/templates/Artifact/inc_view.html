@@ -9,9 +9,32 @@
 <div class="form-horizontal" ms-controller="artifact_view" class="ms-controller">
 <legend>Artifact detail</legend>
     <dl class="dl-horizontal">
-        <dt>id</dt><dd>{{=item.id}}</dd>
-        <dt>Artifact ID</dt><dd>{{="%s-%s"%(item.asite,item.aindex)}}</dd>
+        <dt>id</dt><dd>{%item.id%}</dd>
+        <dt>Artifact ID</dt><dd>{%item.aid%}</dd>
+        <dt>type</dt><dd>{%item.type_label%}</dd>
+        <div ms-visible="item.action_fix">
+            <dt>action fix</dt><dd><a href="#confirm_fix" role="button" class="btn btn-danger btn-mini" data-toggle="modal">fix</a></dd>
+        </div>
+        <div ms-visible="item.action_set_ready">
+            <dt>action set ready</dt><dd><button class="btn btn-primary btn-mini" ms-click="action_set_ready">set ready</button></dd>
+        </div>
+
     </dl>
+
+    <div ms-if="item.action_fix" id="confirm_fix" class="modal hide fade" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3>confirm to fix</h3>
+      </div>
+      <div class="modal-body">
+        <p>if artifact fixed, you will not able to update it any more, confirm?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">cancel</button>
+        <button class="btn btn-danger" ms-click="action_fix">confirm to fix</button>
+      </div>
+    </div>
+
 <legend>Artifact files</legend>
 <table id="table_files" data-toggle="table"
     data-toolbar="#tool-bar"
@@ -36,18 +59,65 @@
     </thead>
 </table>
 
-<span class="btn btn-success fileinput-button">
+<span ms-visible="!item.fixed" class="btn btn-success fileinput-button">
     <i class="icon-plus icon-white"></i>
     <span>Select files to upload</span>
     <input id="fileupload" type="file" name="files"  multiple>
 </span>
 
+</div>
+
 <script>
 require(["domReady!"], function() {
     var vm = avalon.define({
-        $id : "history",
+        $id : "artifact_view",
+        item : {},
+        update_item : function(){
+            $.ajax({
+                type: "POST",
+                url: "{{=url_for('shapps.linci.artifact.views.Artifact.api_get')}}",
+                data: {id : {{=item.id}}},
+                success: function(data){
+                    if (data.success) {
+                        vm.item = data.item
+                    }
+                    else {
+                        show_message(data.msg,data.success?"success":"error")
+                    }
+                }
+            })
+        },
+        action_fix : function(){
+            $.ajax({
+                type: "POST",
+                url: "{{=url_for('shapps.linci.artifact.views.Artifact.api_fix')}}",
+                data: {id : {{=item.id}}},
+                success: function(data){
+                    show_message(data.msg,data.success?"success":"error")
+                    if (data.success) {
+                        $('#confirm_fix').modal('hide')
+                        vm.update_item()
+                    }
+                }
+            })
+        },
+        action_set_ready : function(){
+            $.ajax({
+                type: "POST",
+                url: "{{=url_for('shapps.linci.artifact.views.Artifact.api_set_ready')}}",
+                data: {id : {{=item.id}}},
+                success: function(data){
+                    show_message(data.msg,data.success?"success":"error")
+                    if (data.success) {
+                        vm.update_item()
+                    }
+                }
+            })
+        }
     })
+    view_vm = vm
     avalon.scan()
+    vm.update_item()
 
     $('#fileupload').fileupload({
         url: '{{=url_for("shapps.linci.artifact.views.Artifact.api_upload")}}?id={{=item.id}}',

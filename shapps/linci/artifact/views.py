@@ -99,12 +99,6 @@ class Artifact(object):
             l = l.offset(offset)
         return json({"total":l.count(), "rows": [i.to_dict() for i in l]})
 
-    def api_update(self):
-        item = self._get_artifact_item()
-        if not item:
-            return json({"success":False,"msg":"error: artifact not found"})
-        return json({"success":True,"msg":"artifact update OK"})
-
     def api_upload(self):
         item = self._get_artifact_item()
         if not item:
@@ -114,6 +108,43 @@ class Artifact(object):
         flist_str = ",".join([item.normalize_path(request.files[k].filename) for k in request.files])
 
         return json({"success":True,"msg":"artifact file uploaded OK: %s"%(flist_str)})
+
+    def api_get(self):
+        if not functions.linci_artifact_has_permission("linci_artifact_read"):
+            return json({"success":False,"msg":"error: have no permission"})
+        item = self._get_artifact_item()
+        if not item:
+            return json({"success":False,"msg":"error: artifact not found"})
+
+        d = item.to_dict()
+        perm_update = functions.linci_artifact_has_permission("linci_artifact_update")
+        d["aid"] = "%s-%s"%(d["asite"],d["aindex"])
+        sid,sort_num,tclass = functions.get_linci_artifact_type(item.type)
+        d["type_label"] = tclass.name
+        d["action_fix"] = (not item.fixed) and item.ready and perm_update
+        d["action_set_ready"] = (not item.ready) and perm_update
+
+        return json({"success":True,"item":d})
+
+    def api_fix(self):
+        if not functions.linci_artifact_has_permission("linci_artifact_update"):
+            return json({"success":False,"msg":"error: have no permission"})
+
+        item = self._get_artifact_item()
+        item.fixed = True
+        item.save()
+
+        return json({"success":True,"msg":"artifact fix OK"})
+
+    def api_set_ready(self):
+        if not functions.linci_artifact_has_permission("linci_artifact_update"):
+            return json({"success":False,"msg":"error: have no permission"})
+
+        item = self._get_artifact_item()
+        item.ready = True
+        item.save()
+
+        return json({"success":True,"msg":"artifact set ready OK"})
 
     def api_artifactfile_list_bootstraptable_data(self):
         if not functions.linci_artifact_has_permission("linci_artifact_read"):
@@ -149,7 +180,7 @@ class Artifact(object):
 
     def api_artifactfile_download(self):
         if not functions.linci_artifact_has_permission("linci_artifact_read"):
-            return json({"success":False,"msg":"have not permission"}, status=403)
+            return json({"success":False,"msg":"have no permission"}, status=403)
 
         not_found_response = json({"success":False,"msg":"not found"}, status=404)
 

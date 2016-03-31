@@ -50,6 +50,8 @@ class LinciArtifact(Model):
         p = p.replace('\\', '/')
         if p.startswith("./"):
             p = p[2:]
+        elif p.startswith("/"):
+            p = p[1:]
         return p
 
     def _update_file_list(self, file_list):
