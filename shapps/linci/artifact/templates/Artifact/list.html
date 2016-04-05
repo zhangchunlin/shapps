@@ -5,36 +5,5 @@
 {{end sub_menu}}
 
 {{block content_main}}
-{{use 'jqcookie'}}
-{{use 'bootstraptable', extensions = ["cookie"]}}
-<table id="table" data-toggle="table"
-    data-toolbar="#tool-bar"
-    data-toolbar-align="left"
-    data-url="{{=url_for('shapps.linci.artifact.views.Artifact.api_list_bootstraptable_data')}}"
-    data-pagination="true"
-    data-side-pagination="server"
-    data-page-list="[10, 20, 50, 100, 200]"
-    data-page-size = "10"
-    data-show-columns="true"
-    data-method="post"
-    data-sort-name="id"
-    data-sort-order="desc"
-    data-buttons-align='left'>
-    <thead>
-    <tr>
-        <th data-field="id" data-sortable="true">id</th>
-        <th data-field="aindex" data-sortable="true" data-formatter="format_aid">Artifact ID</th>
-        <th data-field="cdate" data-sortable="true">create date time</th>
-    </tr>
-    </thead>
-</table>
-
-<script>
-function format_aid(value, row){
-    link = '{{=url_for('shapps.linci.artifact.views.Artifact.view')}}?id='+ row.id
-    link = '<a href="' + link + '">' + row.asite + '-' + value +'</a>'
-    return link
-}
-</script>
-
+{{include "Artifact/inc_list.html"}}
 {{end content_main}}

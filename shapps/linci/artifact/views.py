@@ -204,8 +204,10 @@ class Artifact(object):
     #--- web admin ---
     def list(self):
         if not functions.linci_artifact_has_permission("linci_artifact_read"):
-            return json({"total":0, "rows": []})
-        return {}
+            errmsg = "no permission"
+        else:
+            errmsg = ""
+        return {"errmsg":errmsg}
 
     def view(self):
         item = self._get_artifact_item()

@@ -18,7 +18,6 @@
         <div ms-visible="item.action_set_ready">
             <dt>action set ready</dt><dd><button class="btn btn-primary btn-mini" ms-click="action_set_ready">set ready</button></dd>
         </div>
-
     </dl>
 
     <div ms-if="item.action_fix" id="confirm_fix" class="modal hide fade" tabindex="-1" role="dialog" aria-hidden="true">
@@ -47,8 +46,8 @@
     data-page-size = "10"
     data-show-columns="true"
     data-method="post"
-    data-sort-name="id"
-    data-sort-order="desc"
+    data-sort-name="path"
+    data-sort-order="asc"
     data-buttons-align='left'>
     <thead>
     <tr>
