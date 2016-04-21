@@ -3,7 +3,8 @@
 apiuser is an uliweb app which add support to easy interface to non-browser tools for using uliweb auth.
 
 # api example
-http get for example, but **http post** is more **recommended**, because you can place any string in http post
+http get for example,but not recommended, but **http post** is more **recommended**, because http get have to escape for some charactor and will log password or token in accesslog
+for token, you can also placing it in cookies(like browser)
 
 ```
 $ curl http://localhost:8000/apiuser/api_get_auth

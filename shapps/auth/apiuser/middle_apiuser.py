@@ -7,7 +7,9 @@ class ApiuserMiddle(Middleware):
     def process_request(self, request):
         user = getattr(request,'user',None)
         if not user:
-            key = request.values.get(settings.AUTH_APIUSER.TOKEN_NAME)
+            key = request.cookies.get(settings.AUTH_APIUSER.TOKEN_NAME)
+            if not key:
+                key = request.values.get(settings.AUTH_APIUSER.TOKEN_NAME)
             if key:
                 session = functions.get_session(key)
 
