@@ -45,7 +45,7 @@ class Artifact(object):
     def api_new(self):
         if not functions.linci_artifact_has_permission("linci_artifact_new"):
             return json({"success":False,"msg":"error: no permission"})
-        asite = request.values.get("asite")
+        asite = request.values.get("asite",settings.LINCI.artifact_site)
         aindex = request.values.get("aindex")
         if not asite:
             return json({"success":False,"msg":"error: parameter 'asite' needed"})
@@ -68,7 +68,8 @@ class Artifact(object):
         linciartifact = LinciArtifact(asite = asite,aindex = aindex)
         ret = linciartifact.save()
         if ret:
-            return json({"success":True,"msg":"new artifact '%s-%s' OK"%(linciartifact.asite,linciartifact.aindex)})
+            aid = '%s-%s'%(linciartifact.asite,linciartifact.aindex)
+            return json({"success":True,"aid":aid,"msg":"new artifact '%s' OK"%(aid)})
         else:
             json({"success":False,"msg":"error: unknown error when create new artifact"})
 
@@ -213,6 +214,11 @@ class Artifact(object):
         item = self._get_artifact_item()
         if item:
             errmsg = ""
+            sid,sort_num,tclass = functions.get_linci_artifact_type(item.type)
+            if tclass:
+                view_template = getattr(tclass,"view_template",None)
+                if view_template:
+                    response.template = view_template
         else:
             errmsg = "artifact not found"
         return {"errmsg":errmsg,"item":item}
