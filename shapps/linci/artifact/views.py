@@ -64,6 +64,8 @@ class Artifact(object):
                 aindex = int(aindex)
             except ValueError as e:
                 return json({"success":False,"msg":"error: aindex not integer"})
+        if not settings.LINCI_ARTIFACT_TYPE.get(atype):
+            return json({"success":False,"msg":"error: bad artifact type %s"%(atype)})
 
         LinciArtifact = get_model("linciartifact")
         linciartifact = LinciArtifact(asite = asite,aindex = aindex,type = atype)
