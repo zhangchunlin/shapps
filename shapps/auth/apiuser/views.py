@@ -48,9 +48,6 @@ class ApiUser(object):
                 from uliweb.utils.date import now
 
                 user = d
-                if settings.AUTH_APIUSER.LOGIN_AUTH_TYPE_RESTRICTED:
-                    if user.auth_type!=settings.AUTH.AUTH_TYPE_APIUSER:
-                        return json({"success":False,"msg":"bad auth type for this user, only apiuser allowed"})
                 user.last_login = now()
                 user.save()
                 request.user = user

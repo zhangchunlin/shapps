@@ -16,6 +16,3 @@ $ curl http://localhost:8000/apiuser/api_get_auth?apiuser_token=153222cd9a7c66e3
 $ curl http://localhost:8000/apiuser/api_logout?apiuser_token=153222cd9a7c66e3e39a6da607b6cba4a607b6cba4
 {"msg":"user logout successfully","success":true}
 ```
-
-# settings
-**settings.AUTH_APIUSER.LOGIN_AUTH_TYPE_RESTRICTED** is a switch for whether the api can be used for all the auth type or just for **settings.AUTH.AUTH_TYPE_APIUSER** type user

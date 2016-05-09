@@ -17,9 +17,6 @@ class ApiuserMiddle(Middleware):
                 if user_id:
                     User = get_model('user')
                     user = User.get(user_id)
-                    if user and settings.AUTH_APIUSER.LOGIN_AUTH_TYPE_RESTRICTED:
-                        if user.auth_type!=settings.AUTH.AUTH_TYPE_APIUSER:
-                            user = None
                     ip_addr = session.get(settings.AUTH_APIUSER.SESSION_KEY_IP)
                     if user and request.environ['REMOTE_ADDR']!=ip_addr:
                         user = None
