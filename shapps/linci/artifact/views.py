@@ -47,6 +47,7 @@ class Artifact(object):
             return json({"success":False,"msg":"error: no permission"})
         asite = request.values.get("asite",settings.LINCI.artifact_site)
         aindex = request.values.get("aindex")
+        atype = request.values.get("atype","default")
         if not asite:
             return json({"success":False,"msg":"error: parameter 'asite' needed"})
         asite = asite.upper()
@@ -65,7 +66,7 @@ class Artifact(object):
                 return json({"success":False,"msg":"error: aindex not integer"})
 
         LinciArtifact = get_model("linciartifact")
-        linciartifact = LinciArtifact(asite = asite,aindex = aindex)
+        linciartifact = LinciArtifact(asite = asite,aindex = aindex,type = atype)
         ret = linciartifact.save()
         if ret:
             aid = '%s-%s'%(linciartifact.asite,linciartifact.aindex)
@@ -120,7 +121,7 @@ class Artifact(object):
         d = item.to_dict()
         perm_update = functions.linci_artifact_has_permission("linci_artifact_update")
         d["aid"] = "%s-%s"%(d["asite"],d["aindex"])
-        sid,sort_num,tclass = functions.get_linci_artifact_type(item.type)
+        tclass = functions.get_linci_artifact_scheme_class(item.type)
         d["type_label"] = tclass.name
         d["action_fix"] = (not item.fixed) and item.ready and perm_update
         d["action_set_ready"] = (not item.ready) and perm_update
@@ -214,7 +215,7 @@ class Artifact(object):
         item = self._get_artifact_item()
         if item:
             errmsg = ""
-            sid,sort_num,tclass = functions.get_linci_artifact_type(item.type)
+            tclass = functions.get_linci_artifact_scheme_class(item.type)
             if tclass:
                 view_template = getattr(tclass,"view_template",None)
                 if view_template:

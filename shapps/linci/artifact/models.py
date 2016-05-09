@@ -19,7 +19,7 @@ class LinciArtifact(Model):
     aindex = Field(int)
 
     #artifact type
-    type = Field(int, default = 1)
+    type = Field(str, max_length=20, default='default')
 
     project_id = Field(int, index=True)
     project_name = Field(str)
@@ -121,10 +121,13 @@ class LinciArtifact(Model):
         artifact_dpath = self.get_artifact_dpath()
         if not os.path.exists(artifact_dpath):
             os.makedirs(artifact_dpath)
+            log.info("mkdir %s"%(artifact_dpath))
         fname = "%s"%(int(time.time()*1000000))
         fpath = os.path.join(artifact_dpath,fname)
         files.save_file(fpath,fobj)
-        return fname,self.normalize_path(fobj.filename)
+        fpath_normalized = self.normalize_path(fobj.filename)
+        log.info("store %s in %s"%(repr(fpath_normalized),fpath))
+        return fname,fpath_normalized
 
 class LinciArtifactProperty(Model):
     artifact = Reference("linciartifact", nullable=False, collection_name='props')
