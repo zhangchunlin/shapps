@@ -23,6 +23,10 @@
     };
 
     var setCookie = function (that, cookieName, sValue, sPath, sDomain, bSecure) {
+        // not save pageNumber
+        if (cookieName == idsStateSaveList.pageNumber){
+            return true;
+        }
         if ((!that.options.stateSave) || (!cookieEnabled()) || (that.options.stateSaveIdTable === '')) {
             return;
         }
