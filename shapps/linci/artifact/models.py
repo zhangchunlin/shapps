@@ -92,6 +92,8 @@ class LinciArtifact(Model):
         if not meta.get("artifact_id"):
             if self.aindex and self.asite:
                 meta["artifact_id"] = "%s-%s"%(self.asite,self.aindex)
+        if not meta.get("artifact_type"):
+            meta["artifact_type"] = self.type
         meta_fpath = self._get_artifact_meta_fpath()
         json.dump(meta,open(meta_fpath,"w"),indent=2,sort_keys=True)
 

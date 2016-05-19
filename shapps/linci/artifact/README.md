@@ -31,7 +31,8 @@ The **.meta** file is a json file, example:
 ```
 {
   "__ext": {},
-  "artifact_id": "EXAMPLE-2"
+  "artifact_id": "EXAMPLE-2",
+  "artifact_type":"default",
   "file_list": [
     {
       "path": "rom.img",

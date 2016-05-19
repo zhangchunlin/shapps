@@ -108,6 +108,9 @@ class Artifact(object):
         if not item:
             return json({"success":False,"msg":"error: artifact not found"})
 
+        if item.fixed:
+            return json({"success":False,"msg":"error: artifact had been fixed"})
+
         item.add_files(request.files)
         flist_str = ",".join([item.normalize_path(request.files[k].filename) for k in request.files])
 
@@ -128,6 +131,12 @@ class Artifact(object):
         d["action_fix"] = (not item.fixed) and item.ready and perm_update
         d["action_set_ready"] = (not item.ready) and perm_update
 
+        files = request.values.get("files","false")
+        if files=="true":
+            LinciArtifactFile = get_model("linciartifactfile")
+            l = LinciArtifactFile.filter(LinciArtifactFile.c.artifact==item.id)
+            d["files"] = [i.to_dict() for i in l]
+
         return json({"success":True,"item":d})
 
     def api_fix(self):
@@ -145,7 +154,7 @@ class Artifact(object):
             return json({"success":False,"msg":"error: have no permission"})
 
         item = self._get_artifact_item()
-        item.ready = True
+        item.ready = bool(request.values.get("ready","true").lower()=="true")
         item.save()
 
         return json({"success":True,"msg":"artifact set ready OK"})
