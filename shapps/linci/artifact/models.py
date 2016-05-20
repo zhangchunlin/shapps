@@ -7,6 +7,7 @@ import logging
 import os
 import time
 import json
+import datetime
 
 
 log = logging.getLogger('linci.artifact')
@@ -134,9 +135,28 @@ class LinciArtifact(Model):
 class LinciArtifactProperty(Model):
     artifact = Reference("linciartifact", nullable=False, collection_name='props')
     key = Field(str, index=True)
+    attr_name = Field(str, max_length=20)
     str_value = Field(str)
     int_value = Field(int)
     datetime_value = Field(datetime.datetime)
+
+    def set_value(self,value,attr_name=None):
+        """
+        attr_name can be None (automaticly select which attr by type)
+            or one of these: 'str_value', 'int_value', 'datetime_value'
+        """
+        if not attr_name:
+            if isinstance(value,(str,unicode)):
+                attr_name = "str_value"
+            elif isinstance(value,int):
+                attr_name = "int_value"
+            elif isinstance(value,datetime.datetime):
+                attr_name = "datetime_value"
+            self.attr_name = attr_name
+        setattr(self, attr_name, value)
+
+    def get_value(self):
+        return getattr(self, self.attr_name)
 
 class LinciArtifactFile(Model):
     artifact = Reference("linciartifact", nullable=False, collection_name='files')
