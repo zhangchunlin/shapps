@@ -160,6 +160,8 @@ class Artifact(object):
         return json({"success":True,"msg":"artifact set ready OK"})
 
     def api_artifactfile_list_bootstraptable_data(self):
+        from uliweb.utils.common import convert_bytes
+
         if not functions.linci_artifact_has_permission("linci_artifact_read"):
             return json({"total":0, "rows": []})
 
@@ -181,6 +183,8 @@ class Artifact(object):
             return json({"total":0, "rows": []})
         l = l.filter(LinciArtifactFile.c.artifact==item_id)
         if sort:
+            if sort=="size_str":
+                sort = "size"
             sort_key = getattr(LinciArtifactFile.c,sort)
             if order:
                 sort_key = getattr(sort_key,order)()
@@ -189,7 +193,11 @@ class Artifact(object):
             l = l.limit(limit)
         if offset:
             l = l.offset(offset)
-        return json({"total":l.count(), "rows": [i.to_dict() for i in l]})
+        def get_info(i):
+            d = i.to_dict()
+            d["size_str"] = convert_bytes(i.size)
+            return d
+        return json({"total":l.count(), "rows": [get_info(i) for i in l]})
 
     def api_artifactfile_download(self):
         if not functions.linci_artifact_has_permission("linci_artifact_read"):

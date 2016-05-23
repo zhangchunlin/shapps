@@ -104,17 +104,17 @@ class LinciArtifact(Model):
         file_list = []
         for k in files:
             f = files[k]
-            store_fpath,fpath = self.add_file(f)
+            store_fpath,fpath,fsize = self.add_file(f)
             file_list.append((store_fpath,fpath))
             count += 1
             afile = LinciArtifactFile.filter(LinciArtifactFile.c.artifact==self.id,
                 LinciArtifactFile.c.path==fpath).one()
             if afile:
                 afile.store_path = store_fpath
-                afile.size = -1
+                afile.size = fsize
                 afile.md5 = ""
             else:
-                afile = LinciArtifactFile(artifact=self.id,path=fpath,store_path=store_fpath)
+                afile = LinciArtifactFile(artifact=self.id,path=fpath,store_path=store_fpath,size=fsize)
             afile.save()
         self._update_file_list(file_list)
         return count
@@ -128,9 +128,10 @@ class LinciArtifact(Model):
         fname = "%s"%(int(time.time()*1000000))
         fpath = os.path.join(artifact_dpath,fname)
         files.save_file(fpath,fobj)
+        fsize = os.path.getsize(fpath)
         fpath_normalized = self.normalize_path(fobj.filename)
-        log.info("store %s in %s"%(repr(fpath_normalized),fpath))
-        return fname,fpath_normalized
+        log.info("store %s in %s,size: %s"%(repr(fpath_normalized),fpath,fsize))
+        return fname,fpath_normalized,fsize
 
 class LinciArtifactProperty(Model):
     artifact = Reference("linciartifact", nullable=False, collection_name='props')
@@ -142,7 +143,7 @@ class LinciArtifactProperty(Model):
 
     def set_value(self,value,attr_name=None):
         """
-        attr_name can be None (automaticly select which attr by type)
+        attr_name can be None (automaticly detect by type)
             or one of these: 'str_value', 'int_value', 'datetime_value'
         """
         if not attr_name:
