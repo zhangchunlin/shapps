@@ -129,7 +129,10 @@ class LinciArtifact(Model):
         fpath = os.path.join(artifact_dpath,fname)
         files.save_file(fpath,fobj)
         fsize = os.path.getsize(fpath)
-        fpath_normalized = self.normalize_path(fobj.filename)
+        filename = getattr(fobj,"filename",None)
+        if not filename:
+            filename = getattr(fobj,"name")
+        fpath_normalized = self.normalize_path(filename)
         log.info("store %s in %s,size: %s"%(repr(fpath_normalized),fpath,fsize))
         return fname,fpath_normalized,fsize
 
