@@ -278,8 +278,9 @@ class LDAPAuth(object):
             l = self._get_ldap_connection()
 
             litems = self._search_user(l,username)
-            if len(litems) != 1:
-                log.error("error, len(litems):%d"%(len(litems)))
+            num = len(litems)
+            if num != 1:
+                log.error("user '%s' match %s user(s)"%(username,num))
                 return False, None
 
             dn, ldap_dict = litems[0]

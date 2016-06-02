@@ -86,13 +86,15 @@ def authenticate(username, password):
     ldap_auth_ok, attr_dict = ldapauth_handler.login(username=username,password=password)
 
     if not ldap_auth_ok:
-        log.error("user '%s' fail to login for ldap"%(username))
+        from uliweb import request
+        log.error("user '%s' fail to login for ldap, try login from '%s'"%(username,request.environ['REMOTE_ADDR']))
         return False,{'password' : _('LDAP error:user does not exist or password is not correct!')}
 
     try:
         user = _sync_ldap_user(username,attr_dict)
     except UserNotFoundError as err:
-        log.error("user '%s' not found"%(username))
+        from uliweb import request
+        log.error("user '%s' not found, try login from '%s'"%(username,request.environ['REMOTE_ADDR']))
         return False,{'username': _('User "%s" does not existed!') % username}
 
     log.info("user '%s' login successfully"%(username))
