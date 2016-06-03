@@ -2,9 +2,10 @@
 from uliweb import expose, functions, settings
 from weto.session import Session
 from uliweb.utils.common import import_attr, application_path
+from shapps.auth.lenovoid import authenticate
 
-@expose('/apiuser')
-class ApiUser(object):
+@expose('/lenovoid')
+class Lenovoid(object):
     def api_get_auth(self):
         user = request.user
         if user:
@@ -14,25 +15,20 @@ class ApiUser(object):
         return json({"username":username})
 
     def api_login(self):
-        username = request.values.get("username")
-        password = request.values.get("password")
+        lpsust = request.values.get(settings.AUTH_LENOVOID.LENOVOID_WUST_NAME)
         rememberme = request.values.get("rememberme")
         if rememberme:
             rememberme = (rememberme.lower()=="true") or (rememberme=='1')
-        if username and password:
-            f,d = functions.authenticate(username=username, password=password,auth_type=settings.AUTH.APIUSER_AUTH_DEFAULT_TYPE)
+        if lpsust:
+            f,d = authenticate(lpsust=lpsust)
             if f:
                 from uliweb.utils.date import now
-
                 user = d
                 user.last_login = now()
                 user.save()
                 request.user = user
-
                 session = functions.get_session()
-
-                session[settings.AUTH_APIUSER.SESSION_KEY_USER] = user.id
-                session[settings.AUTH_APIUSER.SESSION_KEY_IP] = request.environ['REMOTE_ADDR']
+                session[settings.AUTH_LENOVOID.SESSION_KEY_USER] = user.id
                 if session.deleted:
                     session.delete()
                 else:
@@ -42,19 +38,20 @@ class ApiUser(object):
                     else:
                         timeout = settings.SESSION.timeout
                     flag = session.save()
-                    return json({"success":True,
-                        "msg":"log in successfully",
-                        "token_name":settings.AUTH_APIUSER.TOKEN_NAME,
-                        "token":session.key,
+                    return json({
+                        settings.AUTH_LENOVOID.TOKEN_NAME: session.key,
                         "timeout":timeout,
-                        })
+                        }
+                    )
+            else:
+                return json({"error_message": d.get("error_message")}, status = d.get("error_code"))
 
-        return json({"success":False,"msg":"fail to log in"})
+        return json({"error_message":"Fail to log in."}, status = 400)
 
     def api_logout(self):
         user = request.user
         if user:
-            key = request.values.get(settings.AUTH_APIUSER.TOKEN_NAME)
+            key = request.values.get(settings.AUTH_LENOVOID.TOKEN_NAME)
             session = functions.get_session(key)
             session.delete()
             request.user = None
