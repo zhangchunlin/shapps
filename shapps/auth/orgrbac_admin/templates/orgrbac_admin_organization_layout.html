@@ -1,0 +1,18 @@
+{{extend "layout.html"}}
+
+{{block menu}}
+{{menu('admin')}}
+{{end}}
+{{block content_sidebar}}
+{{include "inc_menu.html"}}
+{{block sub_menu}}
+{{use "jquery"}}
+{{use "datatables"}}
+{{use "fontawesome"}}
+{{use "select2"}}
+{{use "jqueryui"}}
+{{use "ace"}}
+{{use "jeditable"}}
+{{sidemenu('sidemenu','user_admin/rbac_org')}}
+{{end sub_menu}}
+{{end content_sidebar}}
