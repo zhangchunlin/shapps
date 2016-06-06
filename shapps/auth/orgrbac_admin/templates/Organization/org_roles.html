@@ -1,0 +1,258 @@
+{{extend "orgrbac_admin_organization_layout.html"}}
+
+{{block content_main}}
+<div class="page-header position-relative">
+    <h5 class="pull-left position-relative">
+     Admin Settings
+     <small>
+              <i class="icon-double-angle-right"></i>
+              {{=functions.get_var("ORGRBAC_COMMON_NAME/organization")}}
+     </small>
+     <small>
+              <i class="icon-angle-right"></i>
+              角色
+     </small>
+    <h5>
+    
+    <div class="widget-toolbar no-border invoice-info">
+        {{if request.user.is_superuser:}}
+        <a class="btn btn-small btn-success" href="{{=url_for('shapps.auth.orgrbac_admin.views.Organization.index')}}" onClick="">返回{{=functions.get_var("ORGRBAC_COMMON_NAME/organization")}}页面</a>
+        {{pass}}
+    </div>
+</div><!--/.page-header-->
+
+<div class="content">
+    <div class="table-header row-fluid " style="padding-left:0px;">
+       <div class="span2" style="margin-left:5px;">
+              {{if schema:}}
+              <span class="">{{=functions.get_var("ORGRBAC_COMMON_NAME/organization")}}名称：{{=orgname}}</span>
+              {{else:}}
+              <span class="">全局权限配置</span>
+              {{pass}}
+       </div>
+        <div class="span3">
+              {{if schema:}}
+              <span class="bigger-100" for="">所属{{=functions.get_var("ORGRBAC_COMMON_NAME/schema")}}:</span><a href="{{=url_for('shapps.auth.orgrbac_admin.views.OrgSchema.schema_permission',schema_id=schema)}}" class="btn btn-mini btn-warning">{{=schemaname}}</a>
+              {{else:}}
+              <span class="bigger-100" for="">所属{{=functions.get_var("ORGRBAC_COMMON_NAME/schema")}}:</span><a href="{{=url_for('shapps.auth.orgrbac_admin.views.OrgSchema.schema_permission',schema_id=schema_id)}}" class="btn btn-mini btn-warning">{{=schemaname}}</a>
+              {{pass}}
+        </div>
+       <div class="span3 ">
+              <span class="bigger-100" for="">{{=functions.get_var("ORGRBAC_COMMON_NAME/schema")}}角色:</span>
+              <select class="" id="roleSelector" data-placeholder="Choose a organization..." style="margin-top:5px;width:70%">
+                           {{for role in roleDict:}}
+                                <option value="{{=role}}">{{=roleDict[role]}}</option>
+                           {{pass}}
+               </select>
+  
+            </div>
+        <div class="span3">
+                <a class="btn btn-mini btn-success" href="#" onClick="javascript:orgRoleAdd()">添加{{=functions.get_var("ORGRBAC_COMMON_NAME/organization")}}{{=functions.get_var("ORGRBAC_COMMON_NAME/schema")}}角色</a>
+                {{if request.user.is_superuser:}}
+                    {{if schema:}}
+                    <a class="btn btn-mini btn-warning" href="{{=url_for('shapps.auth.orgrbac_admin.views.OrgSchema.schema_permission',schema_id=schema)}}" onClick="">{{=functions.get_var("ORGRBAC_COMMON_NAME/organization")}}权限角色管理</a>
+                    {{else:}}
+                    <a class="btn btn-mini btn-warning" href="{{=url_for('shapps.auth.orgrbac_admin.views.OrgSchema.schema_permission',schema_id=schema_id)}}" onClick="">{{=functions.get_var("ORGRBAC_COMMON_NAME/organization")}}权限角色管理</a>
+                    {{pass}}
+                {{pass}}
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table id="currentTable" class="table table-striped table-bordered table-hover" width="100%" style="table-layout:fixed;">
+            <thead>
+                <tr>
+                    <th  width="5"></th>
+                    <th  width="20">{{=functions.get_var("ORGRBAC_COMMON_NAME/organization")}}{{=functions.get_var("ORGRBAC_COMMON_NAME/schema")}}角色</th>
+                    <th  width="60">用户</th>
+                    <th  width="60">用户组</th>
+                    <th  width="30">操作</th>
+                </tr>
+            </thead>
+             <tbody>
+                
+             </tbody>
+        </table>
+    </div><!--end of table-->
+</div>
+
+
+<script type="text/javascript">
+            var addDlg;
+            var oCurrentOrderDataTable;
+            $(function(){
+                $('#roleSelector').select2({
+                    placeholder: "Select role",
+                });
+                $('#s2id_roleSelector').css("margin-top","5px");
+
+                oCurrentOrderDataTable= $('#currentTable').DataTable( {
+                "bProcessing": true,
+                "bFilter": false,
+                "bOrder":false,
+                "bAutoWidth": false,
+                "bPaginate" : true,
+                "bServerSide": true,
+                "bProcessing": true,
+                "bLengthChange": true,
+                "aoColumns": [
+                { "mData": null, "visible": true,"bSortable": false},
+                { "mData": "role_name", "visible": true,"bSortable": false},
+                { "mData": "users", "visible": true,"bSortable": false,
+                    "mRender":function(data, type, full,d) { //----roles is a list with dict {user_id:user_name}
+                        var s_html=""
+                        $.each(data,function(entryIndex,entry){
+                              for (var k in entry){
+                                   s_html+="<span class='label label-info arrowed-right arrowed-in'>"+entry[k]+"</span>";
+                              }
+                        });
+                        return s_html;
+                    }
+                },
+                  { "mData": "usergroups", "visible": true,"bSortable": false,
+                    "mRender":function(data, type, full,d) { //----roles is a list with dict {role_id:role_name}
+                        var s_html=""
+                        $.each(data,function(entryIndex,entry){
+                              for (var k in entry){
+                                   s_html+="<span class='label label-info arrowed-right arrowed-in'>"+entry[k]+"</span>";
+                              }
+                        });
+                        return s_html;
+                    }
+                },
+                { "aTargets":[3],
+                  "mData": "role_id",
+                  "bSortable": false,
+                  "mRender": function(data, type, full,d) { //----
+                               return '<a href="#" onClick="javascript:orgroleDelete('+full.orgrole_id+','+full.role_id+',\''+full.role_name+'\')" class="" data-rel="tooltip" title="View"><span class="red"><i class="icon-trash bigger-120"></i>[删除]</span></a>';
+                    }
+                 }
+                ] ,
+                 "sAjaxSource": '{{=url_for("shapps.auth.orgrbac_admin.views.Organization.api_org_roles_load",org_id=orgid)}}',
+                  "oLanguage": {
+                                                "sProcessing": "正在加载数据...",
+                                                'sSearch': '数据查询:',
+                                                "sLengthMenu": "每页显示 _MENU_ 项记录",
+                                                "sZeroRecords": "没有符合条件的数据...",
+                                                "sInfo": "当前数据为从第 _START_ 到第 _END_ 项数据；总共有 _TOTAL_ 项记录",
+                                                "sInfoEmpty": "显示 0 至 0 共 0 项",
+                                                "sInfoFiltered": "(_MAX_)"
+                               },
+                  "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
+                        var index = iDisplayIndex +1;
+                        $('td:eq(0)',nRow).html(index);
+                        //----prepare the user_id_list from users
+                        var user_id_list=Array();
+                        $.each(aData['users'],function(entryIndex,entry){
+                               for (var k in entry){
+                                    user_id_list.push(parseInt(k));
+                               }
+                        });
+
+                        $('td:eq(2)',nRow).editable('{{=url_for("shapps.auth.orgrbac_admin.views.Organization.api_org_role_update")}}',{
+                             loadurl : '{{=url_for("shapps.auth.orgrbac_admin.views.Organization.api_loaduser")}}',
+                             loaddata: {selected:JSON.stringify(user_id_list)},
+                             type    : 'multiselect',
+                             event     : 'click',
+                             cancel    : 'Cancel',
+                             submit    : 'OK',
+                             placeholder : "click to edit...",
+                             indicator : 'Saving...',
+                             tooltip   : 'click to edit...]',
+                             submitdata : {orgid: "{{=orgid}}",orgroleid:aData['orgrole_id'],column:2},
+                             callback : function(data){
+                                                if (data.status=="OK"){
+                                                   show_message("success");
+                                                   //$(this).html(data.value);
+                                                   oCurrentOrderDataTable.fnDraw();
+                                                }else{
+                                                   //$(this).html();
+                                                }
+                                           }
+                        });
+                        
+                        
+                        var usergroup_id_list=Array();
+                        $.each(aData['usergroups'],function(entryIndex,entry){
+                               for (var k in entry){
+                                    usergroup_id_list.push(parseInt(k));
+                               }
+                        });
+                        $('td:eq(3)',nRow).editable('{{=url_for("shapps.auth.orgrbac_admin.views.Organization.api_org_role_update")}}',{
+                             loadurl : '{{=url_for("shapps.auth.orgrbac_admin.views.Organization.api_loadusergroup")}}',
+                             loaddata: {selected:JSON.stringify(usergroup_id_list)},
+                             type    : 'multiselect',
+                             event     : 'click',
+                             cancel    : 'Cancel',
+                             submit    : 'OK',
+                             placeholder : "click to edit...",
+                             indicator : 'Saving...',
+                             tooltip   : 'click to edit...]',
+                             submitdata : {orgid: "{{=orgid}}",orgroleid:aData['orgrole_id'],column:3},
+                             callback : function(data){
+                                                if (data.status=="OK"){
+                                                   show_message("success");
+                                                   //$(this).html(data.value);
+                                                   oCurrentOrderDataTable.fnDraw();
+                                                }else{
+                                                   //$(this).html();
+                                                }
+                                           }
+                        });
+                        
+                        return nRow;
+                      },
+                });///-----end of define the currentOrder table
+            });
+          function orgroleDelete(id,roleid,name){
+                bootbox.confirm("Are you sure delete this organization role: "+name+"?", function(result) {
+                    if(result) {
+                         $.ajax({
+                            type: "post",
+                            cache:false,
+                            url: '{{=url_for("shapps.auth.orgrbac_admin.views.Organization.api_org_role_delete")}}',
+                            data:{'orgid':"{{=orgid}}",'roleid':roleid,'orgroleid':id},
+                            contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+                            success: function (data) {
+                                    if (data.status=='OK'){
+                                        show_message("success");
+                                        oCurrentOrderDataTable.fnDraw();
+                                    }else{
+                                        bootbox.alert(data.msg);
+                                    }
+                            },
+                            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                                    bootbox.alert('error occured!');
+                            }
+                        });
+                    }
+                });
+           }
+           function orgRoleAdd(){
+                var role=$('#roleSelector').select2('val');
+
+                if (role == null || role==''){
+                    bootbox.alert('请先选择一个方案角色添加，若为空请先到方案权限页面添加相关角色。');
+                }else{
+                     $.ajax({
+                            type: "post",
+                            cache:false,
+                            url: '{{=url_for("shapps.auth.orgrbac_admin.views.Organization.api_org_role_add")}}',
+                            data:{'orgid':"{{=orgid}}",'roleid':role,},
+                            contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+                            success: function (data) {
+                                    if (data.status=='OK'){
+                                        show_message("success");
+                                        oCurrentOrderDataTable.fnDraw();
+                                    }else{
+                                        bootbox.alert(data.msg);
+                                    }
+                            },
+                            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                                    bootbox.alert('error occured!');
+                            }
+                     });
+                }
+           }
+</script>
+
+{{end}}
