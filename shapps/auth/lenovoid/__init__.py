@@ -101,3 +101,21 @@ def _sync_lenovoid_user(username, attr_dict):
     if changed:
         user.save()
     return user
+
+def get_lenovoid_login_url():
+    url = settings.AUTH_LENOVOID.LENOVOID_LOGIN_URL_BASE%{
+        "realm": settings.AUTH_LENOVOID.REALM,
+        "call_back": settings.AUTH_LENOVOID.CALL_BACK,
+        "session_timeout": settings.AUTH_LENOVOID.LENOVOID_SESSION_TIMEOUT,
+    }
+    login_url = urljoin(settings.AUTH_LENOVOID.BASE_URL, url)
+    return login_url
+
+def get_lenovoid_logout_url():
+    url = settings.AUTH_LENOVOID.LENOVOID_LOGOUT_URL_BASE%{
+        "realm": settings.AUTH_LENOVOID.REALM,
+        "call_back": settings.AUTH_LENOVOID.CALL_BACK,
+        "session_timeout": settings.AUTH_LENOVOID.LENOVOID_SESSION_TIMEOUT,
+    }
+    logout_url = urljoin(settings.AUTH_LENOVOID.BASE_URL, url)
+    return logout_url

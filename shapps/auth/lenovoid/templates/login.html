@@ -1,0 +1,29 @@
+{{extend "layout.html"}}
+{{block user_info}}{{end}}
+{{block content}}
+{{include "inc_jquery_dialog2.html"}}
+<div id="login" style="display: none">
+    <h1>{{=_('Login')}}</h1>
+    {{if msg:}}
+    <div class="alert alert-danger bs-alert-old-docs">
+        <strong>{{=msg}}</strong>
+        <p>{{=_('Please goto')}} <a href="{{=lenovoid_url}}">{{=_('Lenovo ID Account')}}</a> {{=_('confirm infomation')}}.</p>
+    </div>
+    {{pass}}
+    <div style="height:100px">
+        <a class="btn btn-large btn-block btn-primary" style="margin-top:40px" type="button" href="{{=lenovoid_login_url}}">{{=_('Lenovo ID Login')}}</a>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function() {
+        $("#login").dialog2({
+            showCloseHandle: false,
+            removeOnClose: false,
+            autoOpen: true,
+            closeOnEscape: false,
+            closeOnOverlayClick: false
+        });
+
+    });
+</script>
+{{end}}
