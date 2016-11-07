@@ -7,4 +7,6 @@ def call(version = None, extensions = []):
     a.append('bootstraptable/bootstrap-table.css')
     for ename in extensions:
         a.append('bootstraptable/extensions/%s/bootstrap-table-%s.js'%(ename, ename))
+        if ename == "export":
+            a.append('bootstraptable/extensions/%s/tableExport.js'%(ename))
     return {'toplinks': a}
