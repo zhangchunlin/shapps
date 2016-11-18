@@ -14,6 +14,7 @@
                 2006 Nick Phillips
     @license: GNU GPL, see COPYING for details.
 """
+from uliweb import settings
 
 import logging
 log = logging.getLogger('shapps.auth.ldap')
@@ -333,8 +334,11 @@ class LDAPAuth(object):
             log.error("invalid credentials, bad bind user or password?")
             return None
 
-        except Exception,err:
+        except Exception as err:
             log.error("get_user() caught an exception(%s):%s",Exception,err)
+
+            if not settings.LDAP.catch_all_ldap_exception:
+                raise err
 
         return attr_dict
 
@@ -351,8 +355,11 @@ class LDAPAuth(object):
                 log.error("invalid credentials, bad bind user or password?")
                 return None
 
-            except Exception,err:
+            except Exception as err:
                 log.error("search_user() caught an exception(%s):%s",Exception,err)
+
+                if not settings.LDAP.catch_all_ldap_exception:
+                    raise err
 
         return user_list
 
@@ -382,6 +389,9 @@ class LDAPAuth(object):
         except Exception as err:
             log.error("get_group() caught an exception:%s,groupname:%s",err,repr(groupname))
 
+            if not settings.LDAP.catch_all_ldap_exception:
+                raise err
+
         return attr_dict
 
     def search_group(self, groupname=None):
@@ -399,14 +409,16 @@ class LDAPAuth(object):
             log.error("invalid credentials, bad bind user or password?")
             return None
 
-        except Exception,err:
+        except Exception as err:
             log.error("search_group() caught an exception(%s):%s",Exception,err)
+
+            if not settings.LDAP.catch_all_ldap_exception:
+                raise err
 
         return group_list
 
 
 #gen a ldapauth_handler for uliweb app
-from uliweb import settings
 if settings.LDAP and settings.LDAP.server_param:
     ldapauth_handler = LDAPAuth(**settings.LDAP.server_param)
 else:

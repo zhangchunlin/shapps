@@ -37,7 +37,7 @@ def _update_user_groups(user,gnames):
 def _sync_ldap_user(username,attr_dict,user_auto_create=None):
     changed = False
     User = get_model('user')
-    user = User.get(User.c.username==username)
+    user = User.filter(User.c.username==username,User.c.auth_type==settings.AUTH.AUTH_TYPE_LDAP).one()
     if not user:
         if user_auto_create==None:
             user_auto_create = settings.LDAP.user_auto_create
@@ -92,6 +92,8 @@ def authenticate(username, password):
 
     try:
         user = _sync_ldap_user(username,attr_dict)
+        if user.deleted:
+            return False,{'username': _('User "%s" has been deleted!') % username}
     except UserNotFoundError as err:
         from uliweb import request
         log.error("user '%s' not found, try login from '%s'"%(username,request.environ['REMOTE_ADDR']))
