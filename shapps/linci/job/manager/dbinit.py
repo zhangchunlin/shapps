@@ -12,7 +12,7 @@ for worker in settings.LINCI.get('WORKERS', []):
     lworker = LinciWorker.get(LinciWorker.c.name==name)
     if not lworker:
         print "new worker name: %s"%(name)
-        lworker = LinciWorker(name=name,status=1)
+        lworker = LinciWorker(name=name)
         lworker.save()
 
 for manager in settings.LINCI.get('MANAGERS', []):
@@ -20,7 +20,7 @@ for manager in settings.LINCI.get('MANAGERS', []):
     workers = manager["workers"]
     lmanager = LinciManager.get(LinciManager.c.name==name)
     if not lmanager:
-        lmanager = LinciManager(name=name,status=1)
+        lmanager = LinciManager(name=name)
         lmanager.save()
         print "new manager: %s"%(name)
         for worker in workers:

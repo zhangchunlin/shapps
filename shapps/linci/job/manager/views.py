@@ -1,5 +1,5 @@
 #coding=utf-8
-from uliweb import expose, functions
+from uliweb import expose, functions, models
 import json as json_
 from gevent.queue import Empty
 import logging
@@ -36,7 +36,7 @@ class LinciJobManager(object):
             yield json_.dumps({"pipe_connect_success":False,"errmsg":"parameter worker_name not found"})
             return
 
-        LinciWorker = functions.get_model("linciworker")
+        LinciWorker = models.linciworker
         worker = LinciWorker.get(LinciWorker.c.name==worker_name)
         if worker:
             worker = worker.get_gobj()

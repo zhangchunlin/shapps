@@ -1,11 +1,12 @@
 #! /usr/bin/env python
 #coding=utf-8
 
-from uliweb import settings, functions
+from uliweb import settings, functions, models
 from uliweb.orm import *
 from uliweb.utils.common import get_var
 from gevent.queue import Queue
 import logging
+from sys import maxint
 
 log = logging.getLogger('linci')
 
@@ -25,8 +26,9 @@ class LinciManager(GobjModel):
     scheme = Field(str, max_length=40)
     workers = ManyToMany('linciworker', collection_name='managers')
     #last job, maybe running or finished
-    latest_job = Reference('lincijob')
-    status = Field(int, choices=get_var('LINCI/MANAGER_STATUS'),default=1)
+    latest_job = Reference('lincijob', max_length=20)
+    #idle, waiting, working
+    status = Field(str, default="idle")
     '''
     [
         {
@@ -46,26 +48,50 @@ class LinciManager(GobjModel):
     props = Field(JSON, default={})
 
     def run(self):
-        #如果最后一个job还未完成
-        #如果当前正在工作那就
-        #如果当前出于waiting状态,那么
-            #尝试找到一个能够工作的worker
-            #如果能找到,那么
-                #新建一个job,并将request/param等信息在job里保存好
-                #跑job
-                #更新worker的当前running job数
-        pass
+        LinciWorkRequest = models.linciworkrequest
+        running = self.latest_job and self.latest_job.is_running()
+        #如果当前没有job在运行,那么应该看看有没有需要处理的请求可以处理
+        if not running:
+            request = self.requests.order_by(LinciWorkRequest.c.id.desc()).one()
+            if request and not request.taken:
+                #有需要处理的request,需要先去看看是否有worker可用
+                worker = self.get_one_worker()
+                if worker:
+                    worker = worker.get_gobj()
+                    #worker拿走request去处理
+                    worker.take_request(request,self)
+
+    def get_one_worker(self):
+        LinciWorker = models.linciworker
+        idle_worker = self.workers.filter(LinciWorker.c.status=="idle").one()
+        if idle_worker:
+            return idle_worker
+
+        #如果找不到idle的,那么遍历working状态的worker,找一个还有工位而且job数最小的
+        working_worker = None
+        min_jobs_num = maxint
+        for worker in self.workers.filter(LinciWorker.c.status=="working"):
+            w = worker.get_gobj()
+            num_ava = w.get_cojobs_num_available()
+            if num_ava>0:
+                if w.cojobs_num < min_jobs_num:
+                    min_jobs_num = w.cojobs_num
+                    working_worker = w
+        return working_worker
 
 class LinciWorkRequest(Model):
     user = Reference('user')
-    manager = Reference('lincimanager')
-    done = Field(bool)
+    manager = Reference('lincimanager', collection_name='requests')
+    taken = Field(bool, default=False)
+    worker = Reference('linciworker', default=None)
     props = Field(JSON, default={})
 
 class LinciWorker(GobjModel):
     name = Field(str, max_length=40)
     user = Reference('user')
-    status = Field(int, choices=get_var('LINCI/WORKER_STATUS'),default=1)
+    max_cojobs_num = Field(int,default=1)
+    #idle, working, lost
+    status = Field(str, default="idle", max_length=20, index=True)
     connected = Field(bool)
     '''
     {
@@ -73,9 +99,9 @@ class LinciWorker(GobjModel):
     '''
     props = Field(JSON, default={})
 
-    #--non-field--#
+    #-- non-field --#
     pipe_connected = False
-    running_job_num = None
+    cojobs_num = None
     msg_queue = None
     def get_msg(self,timeout = 10):
         if not self.msg_queue:
@@ -86,12 +112,35 @@ class LinciWorker(GobjModel):
             self.msg_queue = Queue()
         self.msg_queue.put(msg)
 
+    def take_request(self,request,manager):
+        LinciJob = models.lincijob
+        job = LinciJob(manager=manager.id,
+            worker=self.id,
+            jid=LinciJob.get_next_jid(manager),
+        )
+        job.save()
+        job.get_gobj().run()
+
+    def get_cojobs_num_available(self):
+        if self.cojobs_num==None:
+            self.update_cojobs_num()
+        return self.max_cojobs_num - self.cojobs_num
+
+    def update_cojobs_num(self):
+        LinciJob = models.lincijob
+        self.cojobs_num = LinciJob.filter(LinciJob.c.worker==self.id,LinciJob.status=="working").count()
+
+    def run_job(self,job):
+        pass
+
 class LinciJob(GobjModel):
     manager = Reference('lincimanager')
     worker = Reference('linciworker')
     jid = Field(int)
-    status = Field(int, choices=get_var('LINCI/JOB_STATUS'))
-    result = Field(int, choices=get_var('LINCI/JOB_RESULT'))
+    #initial, waiting, working, finished
+    status = Field(str, default="initial", max_length=20)
+    #unknown, success, fail, exception
+    result = Field(str, default="unknown", max_length=20)
     '''
     {
     }
@@ -99,5 +148,16 @@ class LinciJob(GobjModel):
     props = Field(JSON, default={})
 
     def run(self):
-        #给worker发出work指令
-        pass
+        #如果是处于初始状态,那么开始
+        if self.status == "initial":
+            w = self.worker.get_gobj()
+            w.run_job(self)
+
+    def is_running(self):
+        return self.status=="working"
+
+    @classmethod
+    def get_next_jid(cls,manager):
+        if manager.last_job:
+            return manager.last_job.jid + 1
+        return 1
