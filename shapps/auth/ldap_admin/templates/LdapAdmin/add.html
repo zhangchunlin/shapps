@@ -1,0 +1,57 @@
+{{extend 'user_admin_layout.html'}}
+
+{{block sub_menu}}
+{{sidemenu('sidemenu','user_admin/ldap_list')}}
+{{end}}
+
+{{block content_main}}
+{{use "jquery", css_only=True}}
+{{use "avalon"}}
+<style type="text/css">
+<!--
+.succlist {overflow:auto;}
+.succlist li {list-style:none; float:left; margin: 2px 4px; padding: 4px; background-color:#e7eef8;}
+.faillist {overflow:auto;}
+.faillist li {list-style:none; float:left; margin: 2px 4px; padding: 4px; background-color:#feafaf;}
+-->
+</style>
+<div class="row-fluid" ms-controller="ldapinfo">
+  <h2 class="line">{{=_('Batch Of New Ldap Users')}}</h2>
+    <div class="succlist" ms-visible="succlist.size()>0">
+      <h4 class="line">{{=_('Add success list:')}}</h4>
+      <li class="rounded" ms-repeat="succlist"><span >{%el.username%}</span></li>
+    </div>
+    <div class="faillist" ms-visible="faillist.size()>0">
+      <h4 class="line">{{=_('Add fail list:')}}</h4>
+      <li class="rounded" ms-repeat="faillist"><span >{%el%}</span></li>
+   </div>
+   <br />
+   <div class="separate">
+       <textarea id="ldapusers" style="width:400px;height:200px" ms-duplex="ldapusers"></textarea>
+       <div>说明:支持多帐号人名，逗号分割，批量增加Ldap用户，比如zhangsan,lisi,wangwu</div>
+       <a class="btn btn-primary" href="javascript:void(0);" ms-click="add_batch" id="role-batch-add">AddBatch</a>
+   </div>
+</div>
+
+<script type="text/javascript">
+var vm = avalon.define({
+  $id : "ldapinfo",
+  succlist : [],
+  faillist : [],
+  ldapusers:'',
+  add_batch : function(){
+    $.ajax({
+        type: "POST",
+        url: "{{=url_for('shapps.auth.ldap_admin.views.LdapAdmin.api_addbatch')}}",
+        data: {"ldapusers":vm.ldapusers},
+        dataType: "json",
+        success: function(data){
+            //avalon.log(data)
+            vm.succlist = data.succlist
+            vm.faillist = data.faillist
+        }
+    });
+  }
+})
+</script>
+{{end}}

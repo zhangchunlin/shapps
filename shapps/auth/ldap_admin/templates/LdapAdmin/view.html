@@ -1,0 +1,131 @@
+{{extend 'user_admin_layout.html'}}
+
+{{block sub_menu}}
+{{sidemenu('sidemenu','user_admin/ldap_list')}}
+{{end}}
+
+{{block content_main}}
+{{use "jquery", css_only=True}}
+{{use "avalon"}}
+<div class="row-fluid" ms-controller="userinfo">
+    <div class="span2 well">
+        {{if can_modify:}}
+        <a href="{{=url_for('plugs.user_admin.views_admin.UserView.edit_image')}}" title="{{=_('Click to change portrait')}}"><img src="{{=image_url}}" class="portrait"/></a>
+        <p>单击更改头像</p>
+        {{else:}}
+        <img src="{{=image_url}}" class="portrait"/>
+        {{pass}}
+    </div>
+    <div class="span5">
+        <div class="box-body" ms-if="user!=null && user.id!=''">
+          <h2>User Information</h2>
+          <div class="box-body">
+          <table class="table table-bordered">
+          <tr><th align="right" width=150>Username</th><td>{%user.username%}</td></tr>
+          <tr><th align="right" width=150>Nick Name</th><td>{%user.nickname%}</td></tr>
+          <tr><th align="right" width=150>Email</th><td>{%user.email%}</td></tr>
+          <tr><th align="right" width=150>Is Superuser</th><td><div  ms-class="ui-icon ui-icon-check:user.is_superuser" ></div></td></tr>
+          <tr><th align="right" width=150>Deleted</th><td><div  ms-class="ui-icon ui-icon-closethick:user.deleted" ></div></td></tr>
+          <tr><th align="right" width=150>Joined Date</th><td>{%user.date_join%}</td></tr>
+          <tr><th align="right" width=150>Last Login</th><td>{%user.last_login%}</td></tr>
+          </table>
+          </div>
+        </div>
+        <div class="box-body" ms-if="user == null || user.id==''">
+            <h2>Can't find the user in the database.</h2>
+        </div>
+        <div style="padding:5px;">
+            <a class="btn btn-green" ms-href="/users/edit/{%user.id%}">Edit</a>
+            <a class="btn btn-green" ms-href="javascript:vm.sync_user('{%ldapuser.name%}')"
+              ms-if="ldapuser !=null && ldapuser.name!=''">Sync</a>
+            <a class="btn btn-green" ms-href="javascript:vm.restore_user('{%user.id%}')" onclick="return confirm('Do you really wnat to restore the user?');"
+              ms-if="user.deleted" >Restore</a>
+            <a class="btn btn-blue" ms-href="javascript:vm.delete_user('{%user.id%}')" onclick="return confirm('Do you really wnat to delete the user?');"
+              ms-if="! user.deleted" >Delete</a>
+             <a class="btn btn-blue" ms-href="/users/delete/{%user.id%}" onclick="return confirm('Do you really wnat to remove the user?');"
+              ms-if="ldapuser == null || ldapuser.name==''">Remove</a>
+        </div>
+    </div>
+    <div class="span5">
+        <div class="box-body" ms-if="ldapuser !=null && ldapuser.name!=''">
+          <h2>LdapUser Information</h2>
+          <div class="box-body">
+          <table class="table table-bordered">
+          <tr><th align="right" width=150>Username</th><td>{%ldapuser.name%}</td></tr>
+          <tr><th align="right" width=150>Alias Name</th><td>{%ldapuser.aliasname%}</td></tr>
+          <tr><th align="right" width=150>Surname</th><td>{%ldapuser.surname%}</td></tr>
+          <tr><th align="right" width=150>Given Name</th><td>{%ldapuser.givenname%}</td></tr>
+          <tr><th align="right" width=150>Email</th><td>{%ldapuser.email%}</td></tr>
+          </table>
+          </div>
+        </div>
+        <div class="box-body" ms-if="ldapuser == null || ldapuser.name==''">
+            <h2>Can't find the ldap user.</h2>
+          </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+var vm = avalon.define({
+    {{import json}}
+    $id : "userinfo",
+    user : {{<<json.dumps(user)}},
+    ldapuser : {{<<json.dumps(ldapuser)}},
+    sync_user : function(username){
+        $.ajax({
+            type: "POST",
+            url: "{{=url_for('shapps.auth.ldap_admin.views.LdapAdmin.api_sync_user')}}",
+            data: {"username":username},
+            dataType: "json",
+            success: function(data){
+                //avalon.log(data)
+                if(data.errmsg==""){
+                  show_message("sync success", 'success');
+                  setTimeout('my_reload()',1000)
+                }else{
+                  show_message(data.errmsg, 'error');
+                }
+            }
+        });
+    },
+    delete_user : function(id){
+      $.ajax({
+            type: "POST",
+            url: "{{=url_for('shapps.auth.ldap_admin.views.LdapAdmin.api_delete')}}",
+            data: {"id":id},
+            dataType: "json",
+            success: function(data){
+                //avalon.log(data)
+                if(data.success){
+                  show_message(data.msg, 'success');
+                  setTimeout('my_reload()',1000)
+                }else{
+                  show_message(data.msg, 'error');
+                }
+            }
+        });
+    },
+    restore_user:function(id){
+       $.ajax({
+             type: "POST",
+             url: "{{=url_for('shapps.auth.ldap_admin.views.LdapAdmin.api_restore')}}",
+             data: {"id":id},
+             dataType: "json",
+             success: function(data){
+                 //avalon.log(data)
+                 if(data.success){
+                   show_message(data.msg, 'success');
+                   setTimeout('my_reload()',1000)
+                 }else{
+                   show_message(data.msg, 'error');
+                 }
+             }
+       });
+    }
+})
+function my_reload() {
+  window.location.reload();
+}
+</script>
+{{end}}
