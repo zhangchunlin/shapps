@@ -275,6 +275,7 @@ class LDAPAuth(object):
         if (not username) or (not password):
             return False,None
 
+        dn = "unknown"
         try:
             l = self._get_ldap_connection()
 
