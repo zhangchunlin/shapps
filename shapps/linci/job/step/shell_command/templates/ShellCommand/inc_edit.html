@@ -1,0 +1,58 @@
+{{if locals().get("legend",True):}} <legend>Shell</legend> {{pass}}
+<div ms-controller="shell_command" class="ms-controller">
+<div class="form-horizontal">
+    <div class="control-group">
+        <label class="control-label">shell script</label>
+        <div class="controls">
+            <textarea rows="15" ms-duplex="@shell_script"></textarea>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">action</label>
+        <div class="controls" ms-visible="@submit_err_msg!=''"><label class="label label-important">{%submit_err_msg%}</label></div>
+        <div class="controls">
+            <button type='button' class="btn btn-primary" ms-click="@submit_shell" ms-attr="{disabled:!@can_submit()}">Save shell configuration</button>
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+var vm_shcom = avalon.define({
+    $id : "shell_command",
+    shell_script : "{{<<step.get('shell_script',"").replace('\n','\\n')}}",
+    submit_err_msg : "",
+    changed : false,
+    can_submit : function() {
+        return vm_shcom.changed
+    },
+    init_watch : function() {
+        var w = function(varname) {
+            vm_shcom.$watch(varname, function(newValue, oldValue){
+                vm_shcom.changed = true
+            })
+        }
+        w("shell_script")
+    },
+    submit_shell : function() {
+        data = {
+            id : {{=jmanager.id}},
+            jstep_index : {{=jstep_index}},
+            shell_script : vm_shcom.shell_script
+        }
+        //avalon.log(data)
+        $.ajax({
+            type: "POST",
+            url: "{{=url_for('shapps.linci.job.step.shell_command.views.api_update_shell')}}",
+            data: data,
+            success: function(data){
+                show_message(data.msg,data.success?"success":"error")
+                if (data.success) {
+                    vm_shcom.changed = false
+                }
+            }
+        })
+    }
+})
+vm_shcom.init_watch()
+</script>

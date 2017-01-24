@@ -1,35 +1,113 @@
 #coding=utf-8
-from uliweb import expose, functions, models
+from uliweb import expose, functions, models, jobschemes, request
 import json as json_
 from gevent.queue import Empty
+from sqlalchemy import exc
 import logging
 
 
 log = logging.getLogger('linci')
 
-@expose('/linci')
+def linci_get_jmanager():
+    jm = None
+    jid = request.values.get("id")
+    jname = request.values.get("name")
+    if jid or jname:
+        model = models.lincimanager
+        if jid:
+            jm = model.get(int(jid))
+        if not jm:
+            jm = model.get(model.c.name==jname)
+    return jm
+
+@expose('/linci/job')
 class LinciJobManager(object):
-    @expose('manager/new')
-    def job_manager_new(self):
+    def __begin__(self):
+        self.jmanager = linci_get_jmanager()
+
+    def new(self):
+        sname = request.values.get("jscheme",settings.LINCI.default_job_scheme)
+        return {
+            "jscheme_name":sname,
+            "jscheme":getattr(jobschemes,sname,None),
+            "jobschemes":jobschemes,
+        }
+
+    def api_new(self):
+        jscheme_name = request.values.get("jscheme_name")
+        job_name = request.values.get("job_name")
+
+        model_class = models.lincimanager
+        model = model_class(name=job_name,
+            scheme = jscheme_name)
+        model.init_work_steps(getattr(jobschemes,jscheme_name).steps_num())
+        try:
+            model.save()
+        except exc.IntegrityError as e:
+            log.error("new job manager, scheme: %s, name: %s, error: %s"%(jscheme_name, job_name, e))
+            return json({"msg":"fail to create new job: there already is a job named '%s'"%(job_name),"success":False})
+
+        return json({"msg":"create new job successfully","success":True})
+
+    def edit(self):
+        return {
+            "jmanager":self.jmanager,
+            "jscheme":getattr(jobschemes,self.jmanager.scheme,None),
+            "jcontext":{"jmanager":self.jmanager}
+        }
+
+    def api_update_job_common(self):
+        if self.jmanager:
+            job_name = request.values.get("job_name")
+            if job_name:
+                self.jmanager.name = job_name
+                self.jmanager.save()
+                return json({"msg":"update job common config successfully","success":True})
+            else:
+                return json({"msg":"fail to update, error: job name empty","success":False})
+        else:
+            return json({"msg":"fail to update, error: cannot find this job manager","success":False})
+
+    @expose('edit/<path:name>')
+    def edit_path(self,name):
         return {}
 
-    @expose('manager/edit/<path:name>')
-    def job_manager_edit(self,name):
+    @expose('')
+    def index(self):
         return {}
 
-    @expose('job')
-    def job(self):
+    def api_list_bootstraptable_data(self):
+        if request.data:
+            data = json_.loads(request.data)
+        else:
+            data = {}
+
+        model = models.lincimanager
+        l = model.all()
+
+        sort = data.get("sort")
+        order = data.get("order")
+        limit = data.get("limit")
+        offset = data.get("offset")
+        if sort:
+            sort_key = getattr(model.c,sort)
+            if order:
+                sort_key = getattr(sort_key,order)()
+            l = l.order_by(sort_key)
+        if limit:
+            l = l.limit(limit)
+        if offset:
+            l = l.offset(offset)
+        return json({"total":l.count(), "rows": [i.to_dict() for i in l]})
+
+    @expose('view/<path:name>')
+    def view(self,name):
         return {}
 
-    @expose('job/<path:name>')
-    def job_view(self,name):
+    @expose('view/<path:name>/<int:num>')
+    def view_history(self,name,num):
         return {}
 
-    @expose('job/<path:name>/<int:num>')
-    def job_view_history(self,name,num):
-        return {}
-
-    @expose('api/worker_pipe')
     def api_worker_pipe(self):
         worker_name = request.values.get("worker_name")
         if not worker_name:

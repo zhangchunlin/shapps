@@ -21,10 +21,12 @@ class GobjModel(Model):
             gobj = self
         return gobj
 
+class LinciStepsInitError(Exception): pass
+
 class LinciManager(GobjModel):
-    name = Field(str, max_length=40)
+    name = Field(str, max_length=40, unique=True)
     scheme = Field(str, max_length=40)
-    workers = ManyToMany('linciworker', collection_name='managers')
+    labels = Field(str, max_length=200)
     #last job, maybe running or finished
     latest_job = Reference('lincijob', max_length=20)
     #idle, waiting, working
@@ -37,15 +39,19 @@ class LinciManager(GobjModel):
     ]
     '''
     prop_work_steps = Field(JSON, default=[])
-    '''
-    [
-        {
-        }
-    ]
-    '''
-    prop_work_params = Field(JSON, default={})
     #misc properties
     props = Field(JSON, default={})
+
+    def init_work_steps(self,step_num):
+        if len(self.prop_work_steps)!=step_num:
+            self.prop_work_steps = [{}]*step_num
+            self.save()
+        else:
+            raise LinciStepsInitError("the steps number already same, init already?")
+
+    def update_work_step(self,index,step):
+        self.prop_work_steps[index] = step
+        self.save()
 
     def run(self):
         LinciWorkRequest = models.linciworkrequest
@@ -89,6 +95,7 @@ class LinciWorkRequest(Model):
 class LinciWorker(GobjModel):
     name = Field(str, max_length=40)
     user = Reference('user')
+    lables = ManyToMany('linciworkerlabel', collection_name='workers')
     max_cojobs_num = Field(int,default=1)
     #idle, working, lost
     status = Field(str, default="idle", max_length=20, index=True)
@@ -132,6 +139,9 @@ class LinciWorker(GobjModel):
 
     def run_job(self,job):
         pass
+
+class LinciWorkerLabel(Model):
+    label = Field(str, max_length=60)
 
 class LinciJob(GobjModel):
     manager = Reference('lincimanager')

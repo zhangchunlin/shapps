@@ -1,0 +1,10 @@
+{{extend "layout.html"}}
+
+{{block title}}Linci Artifact{{end title}}
+
+{{block content_sidebar}}
+{{include "inc_menu.html"}}
+{{block sub_menu}}
+{{sidemenu('linci_job_manager')}}
+{{end sub_menu}}
+{{end content_sidebar}}

@@ -1,0 +1,92 @@
+{{extend 'LinciJobManager/layout.html'}}
+
+{{block sub_menu}}
+{{sidemenu('linci_job_manager','linci_job_list')}}
+{{end sub_menu}}
+
+{{block content_main}}
+
+{{if jscheme==None:}}
+
+<div class="alert">
+  <strong>error:</strong> job scheme not found!
+</div>
+
+{{else:}}
+{{use "select2"}}
+{{use "avalon2"}}
+<legend>Create new job</legend>
+<div ms-controller="job" class="ms-controller">
+    <div class="form-horizontal">
+        <div class="control-group" >
+            <label class="control-label">scheme</label>
+            <div class="controls">
+                <select id="jscheme_select">
+                {{for sname in settings.LINCI_JOB_SCHEMES:}}
+                    {{scheme_class = getattr(jobschemes,sname)}}
+                    <option value="{{=sname}}">{{=scheme_class.label}}</option>
+                {{pass}}
+                </select>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label">job name</label>
+            <div class="controls">
+                <input type="text" ms-duplex="@job_name" placeholder="please input job name">
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label">action</label>
+            <div class="controls">
+                <button class="btn btn-primary" ms-click="create_job">Next step</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+<script>
+var vm = avalon.define({
+    $id : "job",
+    job_name : "",
+    jscheme_name : "{{=jscheme_name}}",
+    init_jscheme_select2 : function() {
+        var id = "#jscheme_select"
+        $(id).select2({width:"off",});
+        $(id).select2("val",vm.jscheme_name)
+        $(id).on("change", function(e) {
+            //avalon.log("#jscheme_select change:")
+            //avalon.log(e)
+            var val = e.val
+            vm.jscheme_name = val
+        })
+    },
+    create_job : function() {
+        avalon.log("create job, scheme: "+vm.jscheme_name+",name: "+vm.job_name)
+        var data = {
+            jscheme_name : vm.jscheme_name,
+            job_name : vm.job_name
+        }
+        $.ajax({
+            type: "POST",
+            url: "{{=url_for('shapps.linci.job.manager.views.LinciJobManager.api_new')}}",
+            data: data,
+            success: function(data){
+                show_message(data.msg,data.success?"success":"error")
+                if (data.success) {
+                    var go_next = function(){
+                        window.location.href="{{=url_for('shapps.linci.job.manager.views.LinciJobManager.edit')}}"+"?name="+vm.job_name
+                    }
+                    setTimeout(go_next,1000)
+                }
+            }
+        })
+    }
+})
+vm.init_jscheme_select2()
+</script>
+
+{{#jscheme.html_new(jcontext)}}
+
+{{pass}}
+
+{{end content_main}}

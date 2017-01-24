@@ -1,0 +1,82 @@
+{{extend "LinciJobManager/layout.html"}}
+
+{{block sub_menu}}
+{{sidemenu('linci_job_manager','linci_job_list')}}
+{{end sub_menu}}
+
+{{block content_main}}
+
+{{if jmanager==None:}}
+
+<div class="alert">
+  <strong>error:</strong> job manager not found!
+</div>
+
+{{else:}}
+{{use "select2"}}
+{{use "avalon2"}}
+<legend>Common</legend>
+<div ms-controller="job_common" class="ms-controller">
+    <div class="form-horizontal">
+        <div class="control-group" >
+            <label class="control-label">scheme</label>
+            <div class="controls">
+                <input type="text" value="{{=jmanager.scheme}}" disabled>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label">job name</label>
+            <div class="controls">
+                <input type="text" ms-duplex="@job_name" placeholder="please input job name">
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label">action</label>
+            <div class="controls">
+                <button class="btn btn-primary" ms-click="save_job_common" ms-attr="{disabled:!@can_submit()}">Save common configuration</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+<script>
+var vm_common = avalon.define({
+    $id : "job_common",
+    job_name : "{{=jmanager.name}}",
+    changed : false,
+    can_submit : function() {
+        return vm_common.changed
+    },
+    init_watch : function() {
+        var w = function(varname) {
+            vm_common.$watch(varname, function(newValue, oldValue){
+                //avalon.log(varname+" change from "+oldValue+" to "+newValue)
+                vm_common.changed = true
+            })
+        }
+        w("job_name")
+    },
+    save_job_common : function() {
+        data = {
+            id : {{=jmanager.id}},
+            job_name : vm_common.job_name
+        }
+        //avalon.log(data)
+        $.ajax({
+            type: "POST",
+            url: "{{=url_for('shapps.linci.job.manager.views.LinciJobManager.api_update_job_common')}}",
+            data: data,
+            success: function(data){
+                show_message(data.msg,data.success?"success":"error")
+            }
+        })
+    }
+})
+vm_common.init_watch()
+</script>
+
+{{<<jscheme.html_edit(jcontext)}}
+
+{{pass}}
+
+{{end content_main}}
