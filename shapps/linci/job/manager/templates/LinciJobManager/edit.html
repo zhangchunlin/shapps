@@ -34,6 +34,8 @@
             <label class="control-label">action</label>
             <div class="controls">
                 <button class="btn btn-primary" ms-click="save_job_common" ms-attr="{disabled:!@can_submit()}">Save common configuration</button>
+                <hr>
+                <button class="btn btn-primary" ms-click="trigger_job">Trigger new job</button>
             </div>
         </div>
     </div>
@@ -67,9 +69,24 @@ var vm_common = avalon.define({
             url: "{{=url_for('shapps.linci.job.manager.views.LinciJobManager.api_update_job_common')}}",
             data: data,
             success: function(data){
+                vm_common.changed = false
                 show_message(data.msg,data.success?"success":"error")
             }
         })
+    },
+    trigger_job : function() {
+        data = {
+            id : {{=jmanager.id}},
+        }
+        $.ajax({
+            type: "POST",
+            url: "{{=url_for('shapps.linci.job.manager.views.LinciJobManager.api_trigger')}}",
+            data: data,
+            success: function(data){
+                show_message(data.msg,data.success?"success":"error")
+            }
+        })
+
     }
 })
 vm_common.init_watch()

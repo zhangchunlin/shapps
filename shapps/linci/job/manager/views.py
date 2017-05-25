@@ -18,6 +18,8 @@ def linci_get_jmanager():
             jm = model.get(int(jid))
         if not jm:
             jm = model.get(model.c.name==jname)
+        if jm:
+            jm = jm.get_gobj()
     return jm
 
 @expose('/linci/job')
@@ -67,6 +69,16 @@ class LinciJobManager(object):
                 return json({"msg":"fail to update, error: job name empty","success":False})
         else:
             return json({"msg":"fail to update, error: cannot find this job manager","success":False})
+
+    def api_trigger(self):
+        if self.jmanager:
+            worker = self.jmanager.run()
+            if worker:
+                return json({"msg":"job triggered successfully","success":True})
+            else:
+                return json({"msg":"error: worker not found, request pending now","success":False})
+        else:
+            return json({"msg":"fail to trigger, error: cannot find this job manager","success":False})
 
     @expose('edit/<path:name>')
     def edit_path(self,name):

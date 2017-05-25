@@ -55,17 +55,20 @@ class LinciManager(GobjModel):
 
     def run(self):
         LinciWorkRequest = models.linciworkrequest
-        running = self.latest_job and self.latest_job.is_running()
+        running = bool(self.latest_job and self.latest_job.is_running())
+        log.info("trigger to run job %s(%d), last job running: %s"%(repr(self.name),self.id,running))
         #如果当前没有job在运行,那么应该看看有没有需要处理的请求可以处理
         if not running:
-            request = self.requests.order_by(LinciWorkRequest.c.id.desc()).one()
-            if request and not request.taken:
+            wr = self.requests.order_by(LinciWorkRequest.c.id.desc()).one()
+            if wr and not wr.taken:
                 #有需要处理的request,需要先去看看是否有worker可用
                 worker = self.get_one_worker()
+                log.info("find a worker, result: %s"%(worker))
                 if worker:
                     worker = worker.get_gobj()
                     #worker拿走request去处理
-                    worker.take_request(request,self)
+                    worker.take_request(wr,self)
+                    return worker
 
     def get_one_worker(self):
         LinciWorker = models.linciworker
