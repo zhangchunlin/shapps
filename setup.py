@@ -21,7 +21,7 @@ apps not written by this project's author, it'll under the license of itself.
 
 """
 
-from setuptools import setup
+from setuptools import setup, find_packages
 import shapps
 
 setup(name='shapps',
@@ -38,7 +38,7 @@ setup(name='shapps',
         "Programming Language :: Python :: 2.6",
         "Programming Language :: Python :: 2.7",
     ],
-    packages = ['shapps'],
+    packages = find_packages(),
     platforms = 'any',
     keywords='wsgi web framework',
     author=shapps.__author__,
